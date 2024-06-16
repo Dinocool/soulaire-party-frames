@@ -1,0 +1,9 @@
+<Ui xmlns='http://www.blizzard.com/wow/ui/'>
+    <Script file='HideBlizzard.lua'/>
+    <Script file='SoulairePartyFrame.lua'/>
+    <Script file='SoulairePartyMemberFrame.lua'/>
+    <Include file='SoulairePartyMemberFrameTemplate.xml'/>
+    <Include file='SoulairePartyFrame.xml'/>
+    <Script file='PartyAuras.lua'/>
+    <Script file='PartyAurasMasque.lua'/>
+  </Ui>

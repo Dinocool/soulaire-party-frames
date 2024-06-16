@@ -1,0 +1,12 @@
+## Title: Soulaire's Party Frames
+## Interface: 100206
+## Notes: Make your unit frames colored and glorious.
+## Author: Soulaire
+## SavedVariables: SoulaireFramesDB
+## OptionalDeps: Ace3, LibSharedMedia-3.0
+## IconTexture: Interface/AddOns/Soulaire/icon.tga
+
+Libs\Load.xml
+Config\Load.xml
+Core\Load.xml
+Core.lua

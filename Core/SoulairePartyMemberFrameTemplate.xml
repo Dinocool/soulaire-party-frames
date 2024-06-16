@@ -1,0 +1,289 @@
+<Ui xmlns='http://www.blizzard.com/wow/ui/'>
+	<Button name="SoulairePartyMemberFrameTemplate" mixin="SoulairePartyMemberFrameMixin" hidden="true" inherits="SecureUnitButtonTemplate, PingableUnitFrameTemplate" virtual="true">
+		<Size x="232" y="100"/>
+		<KeyValues>
+			<KeyValue key="disablePortraitMask" value="true" type="boolean"/>
+			<KeyValue key="frameType" value="Party" type="string"/>
+		</KeyValues>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Portrait">
+					<Size x="60" y="60"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" x="24" y="-19"/>
+					</Anchors>
+				</Texture>
+				<MaskTexture parentKey="PortraitMask" atlas="UI-HUD-UnitFrame-Player-Portrait-Mask" hWrapMode="CLAMPTOBLACKADDITIVE" vWrapMode="CLAMPTOBLACKADDITIVE">
+					<Size x="60" y="60"/>
+					<MaskedTextures>
+						<MaskedTexture childKey="Portrait"/>
+					</MaskedTextures>
+					<Anchors>
+						<Anchor point="TOPLEFT" x="24" y="-19"/>
+					</Anchors>
+				</MaskTexture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<Texture parentKey="Texture" atlas="UI-HUD-UnitFrame-Player-PortraitOn" useAtlasSize="true" texelSnappingBias="0.0" snapToPixelGrid="false">
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="VehicleTexture" atlas="UI-HUD-UnitFrame-Player-PortraitOn-Vehicle" useAtlasSize="true" hidden="true">
+					<Anchors>
+						<Anchor point="CENTER" x="-2" y="0"/>
+					</Anchors>
+				</Texture>
+				<FontString parentKey="Name" inherits="GameFontNormalSmall" justifyH="LEFT">
+					<Size x="100" y="12"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" x="88" y="-29"/>
+					</Anchors>
+				</FontString>
+				<FontString parentKey="ResurrectableIndicator" inherits="ResurrectableIndicatorTemplate" hidden="true">
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="BOTTOMLEFT" x="44" y="0"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+            <Layer level="OVERLAY"  textureSubLevel = "0">
+				<!-- StatusFlash is a flash texture for the player portrait and top bar (where the player name is).
+					 This is different from Flash, which is a flash of the entire frame area.-->
+				<Texture parentKey="StatusFlash" atlas="UI-HUD-UnitFrame-Player-PortraitOn-Status" useAtlasSize="true" hidden="true">
+					<Anchors>
+						<Anchor point="TOPLEFT" x="15" y="-14"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY"  textureSubLevel = "1">
+				<Texture parentKey="Flash" atlas="UI-HUD-UnitFrame-Player-PortraitOn-InCombat" useAtlasSize="true" hidden="true" texelSnappingBias="0.0" snapToPixelGrid="false">
+					<Anchors>
+						<Anchor point="CENTER" x="-1.5" y="1"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Frame parentKey="DropDown" inherits="UIDropDownMenuTemplate" id="1" hidden="true">
+				<Size x="10" y="10"/>
+				<Anchors>
+					<Anchor point="TOP" x="-20" y="-10"/>
+				</Anchors>
+			</Frame>
+			<Frame parentKey="PowerBarAlt" inherits="UnitPowerBarAltTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativeKey="$parent" relativePoint="RIGHT" x="13" y="5"/>
+				</Anchors>
+			</Frame>
+			<StatusBar parentKey="HealthBar" inherits="TextStatusBar, SecureFrameParentPropagationTemplate" enableMouseMotion="true" drawLayer="BACKGROUND">
+				<Size x="124" y="20"/>
+				<Anchors>
+					<Anchor point="TOPLEFT" x="85" y="-40"/>
+				</Anchors>
+				<Frames>
+					<Frame parentKey="MyHealPredictionBar" inherits="PartyFrameBarSegmentTemplate, MyHealPredictionBarTemplate"/>
+					<Frame parentKey="OtherHealPredictionBar" inherits="PartyFrameBarSegmentTemplate, OtherHealPredictionBarTemplate"/>
+					<Frame parentKey="HealAbsorbBar" inherits="PartyFrameBarSegmentTemplate, HealAbsorbBarTemplate"/>
+					<Frame parentKey="TotalAbsorbBar" inherits="PartyFrameBarSegmentTemplate, TotalAbsorbBarTemplate"/>
+				</Frames>
+				<Layers>
+					<!-- Setting textureSubLevel to 2 to ensure things are layered above the StatusBar's BarTexture. -->
+					<Layer level="BACKGROUND" textureSubLevel="2">
+						<Texture parentKey="Background" setAllPoints="true" hidden="true">
+							<Color color="BLACK_FONT_COLOR"/>
+						</Texture>
+					</Layer>
+					<Layer level="ARTWORK">
+						<Texture parentKey="OverAbsorbGlow" inherits="OverAbsorbGlowTemplate"/>
+						<Texture parentKey="OverHealAbsorbGlow" inherits="OverHealAbsorbGlowTemplate"/>
+					</Layer>
+					<Layer level="OVERLAY" textureSubLevel="1">
+						<FontString parentKey="CenterText" inherits="TextStatusBarTextLarge">
+							<Anchors>
+								<Anchor point="CENTER" x="0" y="0"/>
+							</Anchors>
+						</FontString>
+						<FontString parentKey="LeftText" inherits="TextStatusBarTextLarge">
+							<Anchors>
+								<Anchor point="LEFT" x="2" y="0"/>
+							</Anchors>
+						</FontString>
+						<FontString parentKey="RightText" inherits="TextStatusBarTextLarge">
+							<Anchors>
+								<Anchor point="RIGHT" x="-2" y="0"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+					<Layer level="OVERLAY" textureSubLevel="2">
+						<MaskTexture parentKey="HealthBarMask" atlas="UI-HUD-UnitFrame-Player-PortraitOn-Bar-Health-Mask" useAtlasSize="true" hWrapMode="CLAMPTOBLACKADDITIVE" vWrapMode="CLAMPTOBLACKADDITIVE">
+							<Anchors>
+								<Anchor point="TOPLEFT" x="-2" y="6"/>
+							</Anchors>
+							<MaskedTextures>
+								<MaskedTexture childKey="MyHealPredictionBar.Fill"/>
+								<MaskedTexture childKey="OtherHealPredictionBar.Fill"/>
+								<MaskedTexture childKey="TotalAbsorbBar.Fill"/>
+								<MaskedTexture childKey="TotalAbsorbBar.TiledFillOverlay"/>
+								<MaskedTexture childKey="OverAbsorbGlow"/>
+								<MaskedTexture childKey="OverHealAbsorbGlow"/>
+								<MaskedTexture childKey="HealAbsorbBar.Fill"/>
+								<MaskedTexture childKey="HealAbsorbBar.LeftShadow"/>
+								<MaskedTexture childKey="HealAbsorbBar.RightShadow"/>
+								<MaskedTexture childKey="Background"/>
+							</MaskedTextures>
+						</MaskTexture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnLoad>
+						self:InitializeTextStatusBar();
+						self.textLockable = 1;
+						self.lockColor = true;
+						self.cvar = "statusText";
+						self.cvarLabel = "STATUS_TEXT_PARTY";
+						self:SetMouseClickEnabled(false);
+					</OnLoad>
+					<OnEnter inherit="prepend">
+						self:GetParent():OnEnter();
+					</OnEnter>
+					<OnLeave inherit="prepend">
+						self:GetParent():OnLeave();
+					</OnLeave>
+					<OnValueChanged>
+						self:GetParent():PartyMemberHealthCheck(value);
+					</OnValueChanged>
+					<OnSizeChanged>
+						UnitFrameHealPredictionBars_UpdateSize(self:GetParent());
+					</OnSizeChanged>
+				</Scripts>
+				<BarTexture parentKey="HealthBarTexture" atlas="UI-HUD-UnitFrame-Player-PortraitOn-Bar-Health"/>
+			</StatusBar>
+			<StatusBar parentKey="ManaBar" inherits="TextStatusBar, SecureFrameParentPropagationTemplate">
+				<Size x="124" y="10"/>
+				<Anchors>
+					<Anchor point="TOPLEFT" x="85" y="-61"/>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY" textureSubLevel="1">
+						<FontString parentKey="CenterText" inherits="TextStatusBarTextLarge">
+							<Anchors>
+								<Anchor point="CENTER" x="1" y="0"/>
+							</Anchors>
+						</FontString>
+						<FontString parentKey="LeftText" inherits="TextStatusBarTextLarge">
+							<Anchors>
+								<Anchor point="LEFT" x="2" y="0"/>
+							</Anchors>
+						</FontString>
+						<FontString parentKey="RightText" inherits="TextStatusBarTextLarge">
+							<Anchors>
+								<Anchor point="RIGHT" x="-2" y="0"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+					<Layer level="OVERLAY" textureSubLevel="2">
+						<MaskTexture parentKey="ManaBarMask" atlas="UI-HUD-UnitFrame-Player-PortraitOn-Bar-Mana-Mask" useAtlasSize="true" hWrapMode="CLAMPTOBLACKADDITIVE" vWrapMode="CLAMPTOBLACKADDITIVE">
+							<Anchors>
+								<Anchor point="TOPLEFT" x="-2" y="2"/>
+							</Anchors>
+						</MaskTexture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnLoad>
+						self:InitializeTextStatusBar();
+						self.textLockable = 1;
+						self.lockColor = true;
+						self.cvar = "statusText";
+						self.cvarLabel = "STATUS_TEXT_PARTY";
+						self:SetMouseClickEnabled(false);
+					</OnLoad>
+					<OnEnter inherit="prepend">
+						self:GetParent():OnEnter();
+					</OnEnter>
+					<OnLeave inherit="prepend">
+						self:GetParent():OnLeave();
+					</OnLeave>
+				</Scripts>
+				<BarTexture atlas="UI-HUD-UnitFrame-Player-PortraitOn-Bar-Mana"/>
+			</StatusBar>
+			<Frame parentKey="PartyMemberOverlay" setAllPoints="true">
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture parentKey="Status" atlas="UI-HUD-UnitFrame-Party-PortraitOn-Status" useAtlasSize="true" hidden="true">
+							<Anchors>
+								<Anchor point="TOPLEFT" x="1" y="-2"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+					<Layer level="OVERLAY">
+						<Texture parentKey="LeaderIcon" atlas="UI-HUD-UnitFrame-Player-Group-LeaderIcon" useAtlasSize="true" hidden="true">
+							<Anchors>
+								<Anchor point="TOPLEFT" x="86" y="-10"/>
+							</Anchors>
+						</Texture>
+						<Texture parentKey="GuideIcon" atlas="UI-HUD-UnitFrame-Player-Group-GuideIcon" useAtlasSize="true" hidden="true">
+							<Anchors>
+								<Anchor point="TOPLEFT" x="86" y="-10"/>
+							</Anchors>
+						</Texture>
+						<Texture parentKey="PVPIcon" hidden="true" useAtlasSize="true">
+							<Anchors>
+								<Anchor point="TOP" relativeKey="$parent" relativePoint="TOPLEFT" x="25" y="-50"/>
+							</Anchors>
+						</Texture>
+						<Texture parentKey="Disconnect" file="Interface\CharacterFrame\Disconnect-Icon" hidden="true">
+							<Size x="64" y="64"/>
+							<Anchors>
+								<Anchor point="LEFT" x="-7" y="-1"/>
+							</Anchors>
+						</Texture>
+						<Texture parentKey="RoleIcon" atlas="roleicon-tiny-tank" hidden="true" texelSnappingBias="0.0" snapToPixelGrid="false">
+							<Size x="28" y="28"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" x="69" y="-64"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Frame parentKey="ReadyCheck" inherits="ReadyCheckStatusTemplate" hidden="true">
+				<Size x="40" y="40"/>
+				<Anchors>
+					<Anchor point="CENTER" relativeKey="$parent.Portrait" relativePoint="CENTER"/>
+				</Anchors>
+				<Scripts>
+					<OnLoad function="RaiseFrameLevelByTwo"/>
+				</Scripts>
+			</Frame>
+			<Frame parentKey="NotPresentIcon" ignoreParentAlpha="true" hidden="true">
+				<Size x="25" y="25"/>
+				<Anchors>
+					<Anchor point="LEFT" relativePoint="RIGHT" x="2" y="-2"/>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture parentKey="texture" setAllPoints="true"/>
+					</Layer>
+					<Layer level="OVERLAY">
+						<Texture parentKey="Border" file="Interface\Common\RingBorder" setAllPoints="true"/>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnEnter>
+						GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+						GameTooltip:SetText(self.tooltip, nil, nil, nil, nil, true);
+						GameTooltip:Show();
+					</OnEnter>
+					<OnLeave function="GameTooltip_Hide"/>
+				</Scripts>
+			</Frame>
+		</Frames>
+		<Scripts>
+			<OnEvent method="OnEvent"/>
+			<OnEnter method="OnEnter"/>
+			<OnLeave method="OnLeave"/>
+			<OnUpdate method="OnUpdate"/>
+		</Scripts>
+	</Button>
+</Ui>
