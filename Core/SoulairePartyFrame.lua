@@ -56,6 +56,11 @@ end
 function SoulairePartyFrameMixin:OnShow()
 	self:InitializePartyMemberFrames()
 	self:UpdatePartyFrames()
+	--Insert Into omnicd
+	if OmniCD and not self.injectedIntoOmni then
+		table.insert(OmniCD[1].unitFrameData,{ [1] = "SoulairePartyFrames",[2] = "SoulairePartyFrame",[3] = "unit",})
+		self.injectedIntoOmni=true
+	end
 end
 
 function SoulairePartyFrameMixin:OnEvent(event, ...)
@@ -80,6 +85,7 @@ function SoulairePartyFrameMixin:InitializePartyMemberFrames()
 
 		-- Set for debugging purposes.
 		memberFrame:SetParentKey("MemberFrame"..i)
+		_G["SoulairePartyFrame"..i] = memberFrame
 
 		memberFrame:SetAttribute("unit", "party"..i)
 		memberFrame:RegisterForClicks("AnyUp")
