@@ -801,6 +801,7 @@ local function SetAura(aura, auraType, partyMember, auraIndex)
 
 
     if aura then
+		auraButton:EnableMouse(true)
         auraButton:SetScript("OnEnter",function(self)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             GameTooltip:SetUnitAura("party"..partyMember, auraIndex, auraType == "Buff" and "HELPFUL" or "HARMFUL")
@@ -832,10 +833,7 @@ local function SetAura(aura, auraType, partyMember, auraIndex)
         auraButton.Border:SetVertexColor(borderColor.r, borderColor.g, borderColor.b)
 		auraButton.CountText:SetText(counttext)
     else
-		auraButton:SetScript("OnEnter",function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetUnitAura("party"..partyMember, 9999999, auraType == "Buff" and "HELPFUL" or "HARMFUL")
-        end)
+		auraButton:EnableMouse(false)
         CooldownFrame_Clear(auraButton.Cooldown)
         auraButton:SetAlpha(0)
     end
