@@ -1,4 +1,4 @@
-SPF = LibStub("AceAddon-3.0"):NewAddon("SPF","AceConsole-3.0","AceHook-3.0")
+SPF = LibStub("AceAddon-3.0"):NewAddon("SPF","AceConsole-3.0","AceHook-3.0", "AceTimer-3.0")
 
 function SPF:OnInitialize()
     -- Database Default profile

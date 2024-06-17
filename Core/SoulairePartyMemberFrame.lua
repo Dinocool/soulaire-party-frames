@@ -61,7 +61,6 @@ function SoulairePartyMemberFrameMixin:NoPowerBarPlayerArt()
     self.HealthBar.HealthBarMask:SetHeight(30)
     --self.HealthBar.HealthBarMask:SetWidth(124)
 
-    self.ManaBar:Hide()
     self.ManaBar:SetHeight(0)
     self.ManaBar:SetWidth(0)
 end
@@ -246,6 +245,7 @@ function SoulairePartyMemberFrameMixin:Setup()
 
 	self.ManaBar:GetStatusBarTexture():AddMaskTexture(self.ManaBar.ManaBarMask)
 
+	self:CreateAuras(self.layoutIndex)
 	self:UpdateMember()
 	self:UpdateLeader()
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -285,6 +285,9 @@ function SoulairePartyMemberFrameMixin:Setup()
 	UIDropDownMenu_SetDisplayMode(self.DropDown, "MENU")
 
 	UnitPowerBarAlt_Initialize(self.PowerBarAlt, self.unitToken, 0.5, "GROUP_ROSTER_UPDATE")
+	
+	--Range Check
+	SPF:ScheduleRepeatingTimer(self.UpdateDistance,0.2,self)
 
 	self.initialized = true
 end
@@ -341,6 +344,7 @@ function SoulairePartyMemberFrameMixin:UpdateMember()
 	self:UpdateOnlineStatus()
 	self:UpdateNotPresentIcon()
 	self:UpdateArt()
+	self:UpdateAuras()
 end
 
 function SoulairePartyMemberFrameMixin:UpdateMemberHealth(elapsed)
@@ -566,9 +570,17 @@ function SoulairePartyMemberFrameMixin:OnEvent(event, ...)
 		self:UpdateNotPresentIcon()
 	elseif event == "INCOMING_SUMMON_CHANGED" then
 		self:UpdateNotPresentIcon()
+	elseif event =="UNIT_AURA" then
+		if arg1 == self:GetUnit() then
+			local unitAuraUpdateInfo = arg2;
+			self:UpdateAuras(unitAuraUpdateInfo);
+		--TODO: Pet Handling
+		--else
+		--if arg1 == self.petUnitToken then
+		--self.PetFrame:UpdateAuras(unitAuraUpdateInfo);
+		--end
+		end
 	end
-
-	self:UpdateDistance()
 end
 
 function SoulairePartyMemberFrameMixin:OnUpdate(elapsed)
@@ -637,4 +649,220 @@ end
 function SoulairePartyMemberFrameMixin:InitializePartyFrameDropDown()
 	local dropdown = UIDROPDOWNMENU_OPEN_MENU or self.DropDown
 	UnitPopup_ShowMenu(dropdown, "PARTY", "party"..dropdown:GetParent().layoutIndex)
+end
+
+function SoulairePartyMemberFrameMixin:UpdateAuras(unitAuraUpdateInfo)
+	local debuffsChanged = false;
+	local buffsChanged = false;
+
+	if unitAuraUpdateInfo == nil or unitAuraUpdateInfo.isFullUpdate or self.debuffs == nil then
+		self:ParseAllAuras(false, false, false, false);
+		debuffsChanged = true;
+		buffsChanged = true;
+	else
+		if unitAuraUpdateInfo.addedAuras ~= nil then
+			for _, aura in ipairs(unitAuraUpdateInfo.addedAuras) do
+				local type = AuraUtil.ProcessAura(aura, false, false, false, false);
+
+				if type == AuraUtil.AuraUpdateChangedType.Debuff or type == AuraUtil.AuraUpdateChangedType.Dispel then
+					self.debuffs[aura.auraInstanceID] = aura;
+					debuffsChanged = true;
+				elseif type == AuraUtil.AuraUpdateChangedType.Buff then
+					self.buffs[aura.auraInstanceID] = aura;
+					buffsChanged = true;
+				end
+			end
+		end
+
+		if unitAuraUpdateInfo.updatedAuraInstanceIDs ~= nil then
+			for _, auraInstanceID in ipairs(unitAuraUpdateInfo.updatedAuraInstanceIDs) do
+				if self.debuffs[auraInstanceID] ~= nil then
+					local newAura = C_UnitAuras.GetAuraDataByAuraInstanceID(self.unit, auraInstanceID);
+					local oldDebuffType = self.debuffs[auraInstanceID].debuffType;
+					if newAura ~= nil then
+						newAura.debuffType = oldDebuffType;
+					end
+					self.debuffs[auraInstanceID] = newAura;
+					debuffsChanged = true;
+				elseif self.buffs[auraInstanceID] ~= nil then
+					local newAura = C_UnitAuras.GetAuraDataByAuraInstanceID(self.unit, auraInstanceID);
+					if newAura ~= nil then
+						newAura.isBuff = true;
+					end
+					self.buffs[auraInstanceID] = newAura;
+					buffsChanged = true;
+				end
+			end
+		end
+
+		if unitAuraUpdateInfo.removedAuraInstanceIDs ~= nil then
+			for _, auraInstanceID in ipairs(unitAuraUpdateInfo.removedAuraInstanceIDs) do
+				if self.debuffs[auraInstanceID] ~= nil then
+					self.debuffs[auraInstanceID] = nil;
+					debuffsChanged = true;
+				elseif self.buffs[auraInstanceID] ~= nil then
+					self.buffs[auraInstanceID] = nil;
+					buffsChanged = true;
+				end
+			end
+		end
+	end
+	if buffsChanged or debuffsChanged then
+		self:AurasUpdate(self.layoutIndex,buffsChanged,debuffsChanged)
+	end
+end
+
+function SoulairePartyMemberFrameMixin:ParseAllAuras() 
+	if self.debuffs == nil then
+		self.debuffs = TableUtil.CreatePriorityTable(AuraUtil.UnitFrameDebuffComparator, TableUtil.Constants.AssociativePriorityTable);
+		self.buffs = TableUtil.CreatePriorityTable(AuraUtil.DefaultAuraCompare, TableUtil.Constants.AssociativePriorityTable);
+	else
+		self.debuffs:Clear();
+		self.buffs:Clear();
+	end
+
+	local batchCount = nil;
+	local usePackedAura = true;
+	local function HandleAura(aura)
+		local type = AuraUtil.ProcessAura(aura, false, false, false, false);
+		if type == AuraUtil.AuraUpdateChangedType.Debuff or type == AuraUtil.AuraUpdateChangedType.Dispel then
+			self.debuffs[aura.auraInstanceID] = aura;
+		elseif type == AuraUtil.AuraUpdateChangedType.Buff then
+			self.buffs[aura.auraInstanceID] = aura;
+		end
+	end
+	AuraUtil.ForEachAura(self.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful), batchCount, HandleAura, usePackedAura);
+	AuraUtil.ForEachAura(self.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Helpful), batchCount, HandleAura, usePackedAura);
+	AuraUtil.ForEachAura(self.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful, AuraUtil.AuraFilters.Raid), batchCount, HandleAura, usePackedAura);
+end
+
+local function CreateAura(partyMember, auraIndex, auraType, anchor, x, y)
+    local partyMemberAuraFrame = "SPF_PartyAuras"..partyMember..auraType
+    local auraButtonName = partyMemberAuraFrame..auraIndex
+
+    local aura = CreateFrame("Button", auraButtonName, _G["SoulairePartyFrame"]["MemberFrame"..partyMember])
+
+    aura:SetFrameLevel(7)
+    aura:SetWidth(24)
+    aura:SetHeight(24)
+    aura:SetID(auraIndex)
+    aura:ClearAllPoints()
+    if auraIndex == 1 then
+        aura:SetPoint("RIGHT", _G["SoulairePartyFrame"]["MemberFrame"..partyMember], anchor, x, y)
+    else
+        aura:SetPoint("LEFT", _G[partyMemberAuraFrame..auraIndex-1], "RIGHT", 6, 0)
+    end
+    aura:SetAttribute("unit", "party"..partyMember)
+    RegisterUnitWatch(aura)
+
+    aura.Icon = aura:CreateTexture(auraButtonName.."Icon", "ARTWORK")
+    aura.Icon:SetAllPoints(aura)
+
+    aura.Cooldown = CreateFrame("Cooldown", auraButtonName.."Cooldown", aura, "CooldownFrameTemplate")
+    aura.Cooldown:SetFrameLevel(8)
+    aura.Cooldown:SetReverse(true)
+    aura.Cooldown:ClearAllPoints()
+    aura.Cooldown:SetAllPoints(aura.Icon)
+    aura.Cooldown:SetParent(aura)
+    --aura.Cooldown:SetHideCountdownNumbers(true)
+	aura.Cooldown:SetCountdownFont("SystemFont_Shadow_Med3")
+
+    --aura.CooldownText = aura.Cooldown:CreateFontString(auraButtonName.."CooldownText", "OVERLAY")
+    --aura.CooldownText:SetFont(GameFontNormal:GetFont(), 12, "OUTLINE")
+    --aura.CooldownText:SetTextColor(1, 1, 1)--(1, 0.75, 0)
+    --aura.CooldownText:ClearAllPoints()
+    --aura.CooldownText:SetPoint("BOTTOM", aura.Icon, "CENTER", 1, -17)
+
+    aura.CountText = aura.Cooldown:CreateFontString(auraButtonName.."CountText", "OVERLAY")
+    aura.CountText:SetFont(GameFontNormal:GetFont(), 12, "OUTLINE")
+    aura.CountText:SetTextColor(1, 1, 1)
+    aura.CountText:ClearAllPoints()
+    aura.CountText:SetPoint("CENTER", aura.Icon, "TOPRIGHT", 0, 0)
+
+    aura.Border = aura:CreateTexture(auraButtonName.."Border", "OVERLAY")
+    aura.Border:SetAtlas("talents-node-choiceflyout-square-sheenmask")
+    aura.Border:SetWidth(24+2)
+    aura.Border:SetHeight(24+2)
+    --aura.Border:SetTexCoord(0.296875, 0.5703125, 0, 0.515625)
+    aura.Border:ClearAllPoints()
+    aura.Border:SetPoint("TOPLEFT", aura, "TOPLEFT", -1, 1)
+
+    aura:EnableMouse(true)
+    aura:SetScript("OnLeave",function()
+        GameTooltip:Hide()
+    end)
+end
+
+local function SetAura(aura, auraType, partyMember, auraIndex)
+    local partyMemberAuraFrame = "SPF_PartyAuras"..partyMember..auraType
+    local auraButtonName = partyMemberAuraFrame..auraIndex
+
+    local auraButton = _G[auraButtonName]
+
+
+    if aura then
+        auraButton:SetScript("OnEnter",function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetUnitAura("party"..partyMember, auraIndex, auraType == "Buff" and "HELPFUL" or "HARMFUL")
+        end)
+
+		local counttext = ""
+        if aura.applications > 1 then
+            counttext = aura.applications
+        end
+
+        auraButton.Icon:SetTexture(aura.icon)
+        auraButton:SetAlpha(1)
+        CooldownFrame_Set(auraButton.Cooldown, aura.expirationTime - aura.duration, aura.duration, aura.duration>0, true)
+
+        local borderColor = {r=0.7, g=0.7, b=0.7}
+        --auraButton.Border:Hide()
+        if aura.isHarmful then
+			DevTool:AddData(aura)
+            if not aura.dispelName then
+                aura.dispelName=""
+            end
+            borderColor = DebuffTypeColor[aura.dispelName]
+            if (auraIndex == 1 and aura.dispelName ~= "") then
+                local partyFrame = _G["SoulairePartyFrame"]["MemberFrame"..partyMember]
+                partyFrame.Flash:Show()
+                partyFrame.Flash:SetVertexColor(borderColor.r, borderColor.g, borderColor.b)
+            end
+        end
+        auraButton.Border:SetVertexColor(borderColor.r, borderColor.g, borderColor.b)
+		auraButton.CountText:SetText(counttext)
+    else
+		auraButton:SetScript("OnEnter",function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetUnitAura("party"..partyMember, 9999999, auraType == "Buff" and "HELPFUL" or "HARMFUL")
+        end)
+        CooldownFrame_Clear(auraButton.Cooldown)
+        auraButton:SetAlpha(0)
+    end
+end
+
+function SoulairePartyMemberFrameMixin:AurasUpdate(partyMember,buffsChanged, debuffsChanged)
+    self.Flash:Hide()
+    -- sort buffs by duration and add them from the shortest to the longest
+    if buffsChanged and self.buffs then
+        for auraIndex = 1, 10 do
+            SetAura(self.buffs[auraIndex], "Buff", partyMember, auraIndex)
+        end
+    end
+    if debuffsChanged and self.debuffs then
+        for auraIndex = 1, 10 do
+            SetAura(self.debuffs[auraIndex], "Debuff", partyMember, auraIndex)
+        end
+    end
+end
+
+function SoulairePartyMemberFrameMixin:CreateAuras(partyMember)
+    maxBuffs=10
+	maxDebuffs=10
+    for auraIndex = 1, maxBuffs do
+        CreateAura(partyMember, auraIndex, "Buff", "TOPRIGHT", 7, -32)
+    end
+    for auraIndex = 1, maxDebuffs do
+        CreateAura(partyMember, auraIndex, "Debuff", "BOTTOMRIGHT", 7, 32)
+    end
 end

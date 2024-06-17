@@ -1,5 +1,5 @@
 ## Title: Soulaire's Party Frames
-## Interface: 100206
+## Interface: 100207
 ## Notes: Make your unit frames colored and glorious.
 ## Author: Soulaire
 ## SavedVariables: SoulaireFramesDB
