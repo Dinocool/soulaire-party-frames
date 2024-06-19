@@ -81,20 +81,18 @@ function SoulHealthBarMixin:OnEvent(event, ...)
 		self:TextStatusBarOnEvent(event, ...)
     elseif ( event == "VARIABLES_LOADED" ) then
         self:UnregisterEvent("VARIABLES_LOADED")
-	elseif self:IsShown() then
-		if ( UnitGUID(self.unit) ) then
-            if ( event == "UNIT_MAXHEALTH"  ) then
-                self:HealPredictionBarsUpdate()
-                self:EventUpdate()
-            elseif ( event == "UNIT_ABSORB_AMOUNT_CHANGED" 
-            or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" 
-            or event == "UNIT_HEAL_PREDICTION" ) then
-                self:HealPredictionBarsUpdate()
-            else
-			    self:EventUpdate()
-            end
-		end
-	end
+	elseif SOUL_ShouldUpdate(self) then
+        if ( event == "UNIT_MAXHEALTH"  ) then
+            self:HealPredictionBarsUpdate()
+            self:EventUpdate()
+        elseif ( event == "UNIT_ABSORB_AMOUNT_CHANGED" 
+        or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" 
+        or event == "UNIT_HEAL_PREDICTION" ) then
+            self:HealPredictionBarsUpdate()
+        else
+            self:EventUpdate()
+        end
+    end
 end
 
 --Sets the unit we're monitoring and updates our events to monitor this new unit

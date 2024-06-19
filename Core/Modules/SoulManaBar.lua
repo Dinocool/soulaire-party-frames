@@ -46,10 +46,8 @@ function SoulManaBarMixin:OnEvent(event, ...)
 		self:TextStatusBarOnEvent(event, ...)
 	elseif ( event == "VARIABLES_LOADED" ) then
 		self:UnregisterEvent("VARIABLES_LOADED")
-	elseif self:IsShown() then
-		if ( UnitGUID(self.unit) ) then
+	elseif ( SOUL_ShouldUpdate(self) ) then
 			self:EventUpdate()
-		end
 	end
 end
 
@@ -70,7 +68,7 @@ function SoulManaBarMixin:UpdatePowerType()
         if (altR) then
 		    manaBarTexture = "UI-HUD-UnitFrame-Player-PortraitOn-Bar-Mana-Status";
             self:SetStatusBarColor(altR, altG, altB);
-        else
+        else    
             manaBarTexture = "UI-HUD-UnitFrame-Player-PortraitOn-Bar-Mana";
         end
     end
