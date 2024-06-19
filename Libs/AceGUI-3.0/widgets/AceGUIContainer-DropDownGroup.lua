@@ -2,15 +2,15 @@
 DropdownGroup Container
 Container controlled by a dropdown on the top.
 -------------------------------------------------------------------------------]]
-local Type, Version = "DropdownGroup-Z", 21
-local AceGUI = LibStub and LibStub("AceGUI-3.0-Z", true)
+local Type, Version = "DropdownGroup", 22
+local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
 
 -- Lua APIs
 local assert, pairs, type = assert, pairs, type
 
 -- WoW APIs
-local CreateFrame = AceGUI.CreateFrameWithBG
+local CreateFrame = CreateFrame
 
 --[[-----------------------------------------------------------------------------
 Scripts
@@ -117,7 +117,7 @@ local function Constructor()
 	titletext:SetJustifyH("LEFT")
 	titletext:SetHeight(18)
 
-	local dropdown = AceGUI:Create("Dropdown-Z")
+	local dropdown = AceGUI:Create("Dropdown")
 	dropdown.frame:SetParent(frame)
 	dropdown.frame:SetFrameLevel(dropdown.frame:GetFrameLevel() + 2)
 	dropdown:SetCallback("OnValueChanged", SelectedGroup)
@@ -125,7 +125,7 @@ local function Constructor()
 	dropdown.frame:Show()
 	dropdown:SetLabel("")
 
-	local border = CreateFrame("Frame", nil, frame)
+	local border = CreateFrame("Frame", nil, frame, "BackdropTemplate")
 	border:SetPoint("TOPLEFT", 0, -26)
 	border:SetPoint("BOTTOMRIGHT", 0, 3)
 	border:SetBackdrop(PaneBackdrop)
@@ -150,7 +150,7 @@ local function Constructor()
 		widget[method] = func
 	end
 	dropdown.parentgroup = widget
-	
+
 	return AceGUI:RegisterAsContainer(widget)
 end
 

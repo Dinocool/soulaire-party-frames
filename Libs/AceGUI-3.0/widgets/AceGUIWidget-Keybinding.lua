@@ -2,8 +2,8 @@
 Keybinding Widget
 Set Keybindings in the Config UI.
 -------------------------------------------------------------------------------]]
-local Type, Version = "Keybinding-Z", 25
-local AceGUI = LibStub and LibStub("AceGUI-3.0-Z", true)
+local Type, Version = "Keybinding", 26
+local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
 
 -- Lua APIs
@@ -12,11 +12,6 @@ local pairs = pairs
 -- WoW APIs
 local IsShiftKeyDown, IsControlKeyDown, IsAltKeyDown = IsShiftKeyDown, IsControlKeyDown, IsAltKeyDown
 local CreateFrame, UIParent = CreateFrame, UIParent
-local CreateFrame = AceGUI.CreateFrameWithBG
-
--- Global vars/functions that we don't upvalue since they might get hooked, or upgraded
--- List them here for Mikk's FindGlobals script
--- GLOBALS: NOT_BOUND
 
 --[[-----------------------------------------------------------------------------
 Scripts
@@ -186,7 +181,7 @@ local function keybindingMsgFixWidth(frame)
 end
 
 local function Constructor()
-	local name = AceGUI.Prefix.."KeybindingButton" .. AceGUI:GetNextWidgetNum(Type)
+	local name = "AceGUI30KeybindingButton" .. AceGUI:GetNextWidgetNum(Type)
 
 	local frame = CreateFrame("Frame", nil, UIParent)
 	local button = CreateFrame("Button", name, frame, "UIPanelButtonTemplate")
@@ -215,7 +210,7 @@ local function Constructor()
 	label:SetJustifyH("CENTER")
 	label:SetHeight(18)
 
-	local msgframe = CreateFrame("Frame", nil, UIParent)
+	local msgframe = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
 	msgframe:SetHeight(30)
 	msgframe:SetBackdrop(ControlBackdrop)
 	msgframe:SetBackdropColor(0,0,0)

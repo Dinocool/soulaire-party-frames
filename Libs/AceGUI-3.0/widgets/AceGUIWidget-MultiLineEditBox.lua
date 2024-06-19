@@ -1,5 +1,5 @@
-local Type, Version = "MultiLineEditBox-Z", 29
-local AceGUI = LibStub and LibStub("AceGUI-3.0-Z", true)
+local Type, Version = "MultiLineEditBox", 32
+local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
 
 -- Lua APIs
@@ -9,11 +9,6 @@ local pairs = pairs
 local GetCursorInfo, GetSpellInfo, ClearCursor = GetCursorInfo, GetSpellInfo, ClearCursor
 local CreateFrame, UIParent = CreateFrame, UIParent
 local _G = _G
-local CreateFrame = AceGUI.CreateFrameWithBG
-
--- Global vars/functions that we don't upvalue since they might get hooked, or upgraded
--- List them here for Mikk's FindGlobals script
--- GLOBALS: ACCEPT, ChatFontNormal
 
 --[[-----------------------------------------------------------------------------
 Support functions
@@ -136,19 +131,22 @@ end
 
 local function OnTextSet(self)                                                   -- EditBox
 	self:HighlightText(0, 0)
-	local num = self:GetNumLetters()
-	self:SetCursorPosition(num)
+	self:SetCursorPosition(self:GetNumLetters())
 	self:SetCursorPosition(0)
 	self.obj.button:Disable()
-	if self.obj.autoselect and num>0 then
-		self:HighlightText(0, num)
-		self.obj:SetFocus(true)
-	end
 end
 
 local function OnVerticalScroll(self, offset)                                    -- ScrollFrame
 	local editBox = self.obj.editBox
 	editBox:SetHitRectInsets(0, 0, offset, editBox:GetHeight() - offset - self:GetHeight())
+end
+
+local function OnScrollRangeChanged(self, xrange, yrange)
+	if yrange == 0 then
+		self.obj.editBox:SetHitRectInsets(0, 0, 0, 0)
+	else
+		OnVerticalScroll(self, self:GetVerticalScroll())
+	end
 end
 
 local function OnShowFocus(frame)
@@ -173,11 +171,6 @@ local methods = {
 		self:SetNumLines()
 		self.entered = nil
 		self:SetMaxLetters(0)
-		self:SetLabelFontObject()
-		self:SetEditFontObject()
-		self:SetButtonNormalFontObject()
-		self:SetButtonHighlightFontObject()
-		self:ApplySkin()
 	end,
 
 	["OnRelease"] = function(self)
@@ -235,14 +228,6 @@ local methods = {
 		self.editBox:SetMaxLetters(num or 0)
 	end,
 
-	["SetButtonText"] = function(self, text)
-		self.button:SetText(text)
-	end,
-
-	["SetButtonWidth"] = function(self, value)
-		self.button:SetWidth(value)
-	end,
-
 	["DisableButton"] = function(self, disabled)
 		self.disablebutton = disabled
 		if disabled then
@@ -252,7 +237,7 @@ local methods = {
 		end
 		Layout(self)
 	end,
-	
+
 	["ClearFocus"] = function(self)
 		self.editBox:ClearFocus()
 		self.frame:SetScript("OnShow", nil)
@@ -272,103 +257,9 @@ local methods = {
 	["GetCursorPosition"] = function(self)
 		return self.editBox:GetCursorPosition()
 	end,
-	
+
 	["SetCursorPosition"] = function(self, ...)
 		return self.editBox:SetCursorPosition(...)
-	end,
-	
-	
-	["SetLabelFontObject"] = function(self, font)
-		self.label:SetFontObject(font or GameFontNormalSmall)
-	end,
-
-	["SetEditFontObject"] = function(self, font)
-		self.editBox:SetFontObject(font or ChatFontNormal)
-	end,
-
-	["SetButtonNormalFontObject"] = function(self, font)
-		self.button:SetNormalFontObject(font or GameFontNormal)
-		self.button:SetDisabledFontObject(font or GameFontNormal)
-	end,
-
-	["SetButtonHighlightFontObject"] = function(self, font)
-		self.button:SetHighlightFontObject(font or GameFontNormal)
-	end,
-
-	["SetAutoselect"] = function(self, value)
-		self.autoselect = value
-	end,
-
-
-
-	["ApplySkin"] = function(self)
-		local SkinData = ZGV.UI.SkinData
-		local CHAIN=ZGV.ChainCall
-
-		if not SkinData("StyleAceGUI") then return end
-
-		CHAIN(self.button)
-			:SetBackdrop(SkinData("AceGUIButtonTexture"))
-			:SetBackdropColor(unpack(SkinData("AceGUIButtonTextureColor")))
-			:SetBackdropBorderColor(unpack(SkinData("AceGUIButtonTextureColor")))
-
-		CHAIN(self.button:GetHighlightTexture())
-			:SetTexture(ZGV.SKINSDIR.."white")
-			:SetVertexColor(1,1,1,0.2)
-			:SetTexCoord(0,1,0,1)
-			:ClearAllPoints()
-			:SetPoint("TOPLEFT",0,-3)
-			:SetPoint("BOTTOMRIGHT",0,3)
-
-		CHAIN(self.scrollBG)
-			:SetBackdrop(SkinData("AceGUIEditBackdropMultiline"))
-			:SetBackdropColor(0,0,0,1)
-			:SetBackdropBorderColor(1,1,1,1)
-
-		if self.scrollBar then
-			ZGV.F.AssignButtonTexture(self.scrollBar.ScrollUpButton,(SkinData("ScrollBarArrowsTexture")),1,2)
-			ZGV.F.AssignButtonTexture(self.scrollBar.ScrollDownButton,(SkinData("ScrollBarArrowsTexture")),2,2)
-		end
-		
-		--[[
-	
-		ScrollBar.top = CHAIN(scrollframe.scroller:CreateTexture())
-			:SetDrawLayer("ARTWORK",1)
-			:SetPoint("TOP")
-			:SetSize(11,SkinData("ScrollBarDecorHeight"))
-			:SetTexture(SkinData("ScrollBarTexture"))
-			:SetTexCoord(0,1,0,1/4)
-			:SetVertexColor(unpack(SkinData("ScrollBarColor")))
-		.__END
-		scrollframe.scroller.bottom = CHAIN(scrollframe.scroller:CreateTexture())
-			:SetDrawLayer("ARTWORK",1)
-			:SetPoint("BOTTOM")
-			:SetSize(11,SkinData("ScrollBarDecorHeight"))
-			:SetTexture(SkinData("ScrollBarTexture"))
-			:SetTexCoord(0,1,2/4,3/4)
-			:SetVertexColor(unpack(SkinData("ScrollBarColor")))
-		.__END
-		scrollframe.scroller.mid = CHAIN(scrollframe.scroller:CreateTexture())
-			:SetDrawLayer("ARTWORK",1)
-			:SetPoint("TOPLEFT",scrollframe.scroller.top,"BOTTOMLEFT")
-			:SetPoint("BOTTOMRIGHT",scrollframe.scroller.bottom,"TOPRIGHT")
-			:SetTexture(SkinData("ScrollBarTexture"))
-			:SetTexCoord(0,1,1/4,2/4)
-			:SetVertexColor(unpack(SkinData("ScrollBarColor")))
-		.__END
-		--]]
-
-
-
-
-		--self.button:GetNormalFontObject():SetTextColor(unpack(SkinData("AceGUIButtonTextColor")))
-		--self.button:GetHighlightFontObject():SetTextColor(unpack(SkinData("AceGUIButtonTextColor")))
-		--self.button:GetDisabledFontObject():SetTextColor(unpack(SkinData("AceGUIButtonTextColorDisabled")))
-
-		self.button.Left:Hide()
-		self.button.Middle:Hide()
-		self.button.Right:Hide()
-
 	end,
 }
 
@@ -384,7 +275,7 @@ local backdrop = {
 local function Constructor()
 	local frame = CreateFrame("Frame", nil, UIParent)
 	frame:Hide()
-	
+
 	local widgetNum = AceGUI:GetNextWidgetNum(Type)
 
 	local label = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -394,26 +285,26 @@ local function Constructor()
 	label:SetText(ACCEPT)
 	label:SetHeight(10)
 
-	local button = CreateFrame("Button", ("%s%dButton"):format(Type, widgetNum), frame, "UIPanelButtonTemplate,BackdropTemplate")
+	local button = CreateFrame("Button", ("%s%dButton"):format(Type, widgetNum), frame, "UIPanelButtonTemplate")
 	button:SetPoint("BOTTOMLEFT", 0, 4)
 	button:SetHeight(22)
 	button:SetWidth(label:GetStringWidth() + 24)
 	button:SetText(ACCEPT)
 	button:SetScript("OnClick", OnClick)
 	button:Disable()
-	
+
 	local text = button:GetFontString()
 	text:ClearAllPoints()
 	text:SetPoint("TOPLEFT", button, "TOPLEFT", 5, -5)
 	text:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -5, 1)
 	text:SetJustifyV("MIDDLE")
 
-	local scrollBG = CreateFrame("Frame", nil, frame)
+	local scrollBG = CreateFrame("Frame", nil, frame, "BackdropTemplate")
 	scrollBG:SetBackdrop(backdrop)
 	scrollBG:SetBackdropColor(0, 0, 0)
 	scrollBG:SetBackdropBorderColor(0.4, 0.4, 0.4)
 
-	local scrollFrame = CreateFrame("ScrollFrame", ("%s%dScrollFrame"):format(Type, widgetNum), frame, "UIPanelScrollFrameTemplate,BackdropTemplate")
+	local scrollFrame = CreateFrame("ScrollFrame", ("%s%dScrollFrame"):format(Type, widgetNum), frame, "UIPanelScrollFrameTemplate")
 
 	local scrollBar = _G[scrollFrame:GetName() .. "ScrollBar"]
 	scrollBar:ClearAllPoints()
@@ -432,6 +323,7 @@ local function Constructor()
 	scrollFrame:SetScript("OnReceiveDrag", OnReceiveDrag)
 	scrollFrame:SetScript("OnSizeChanged", OnSizeChanged)
 	scrollFrame:HookScript("OnVerticalScroll", OnVerticalScroll)
+	scrollFrame:HookScript("OnScrollRangeChanged", OnScrollRangeChanged)
 
 	local editBox = CreateFrame("EditBox", ("%s%dEdit"):format(Type, widgetNum), scrollFrame)
 	editBox:SetAllPoints()
@@ -450,7 +342,7 @@ local function Constructor()
 	editBox:SetScript("OnTextChanged", OnTextChanged)
 	editBox:SetScript("OnTextSet", OnTextSet)
 	editBox:SetScript("OnEditFocusGained", OnEditFocusGained)
-	
+
 
 	scrollFrame:SetScrollChild(editBox)
 

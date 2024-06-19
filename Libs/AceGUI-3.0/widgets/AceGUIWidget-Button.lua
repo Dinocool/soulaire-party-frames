@@ -2,8 +2,8 @@
 Button Widget
 Graphical Button.
 -------------------------------------------------------------------------------]]
-local Type, Version = "Button-Z", 23
-local AceGUI = LibStub and LibStub("AceGUI-3.0-Z", true)
+local Type, Version = "Button", 24
+local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
 
 -- Lua APIs
@@ -12,14 +12,13 @@ local pairs = pairs
 -- WoW APIs
 local _G = _G
 local PlaySound, CreateFrame, UIParent = PlaySound, CreateFrame, UIParent
-local CreateFrame = AceGUI.CreateFrameWithBG
 
 --[[-----------------------------------------------------------------------------
 Scripts
 -------------------------------------------------------------------------------]]
 local function Button_OnClick(frame, ...)
 	AceGUI:ClearFocus()
-	PlaySound(SOUNDKIT.IG_MAINMENU_OPTION)
+	PlaySound(852) -- SOUNDKIT.IG_MAINMENU_OPTION
 	frame.obj:Fire("OnClick", ...)
 end
 
@@ -42,10 +41,6 @@ local methods = {
 		self:SetDisabled(false)
 		self:SetAutoWidth(false)
 		self:SetText()
-		self:SetFontObject()
-		self:SetHighlightFontObject()
-		self:ApplySkin()
-		self:SetStyle()
 	end,
 
 	-- ["OnRelease"] = nil,
@@ -56,7 +51,7 @@ local methods = {
 			self:SetWidth(self.text:GetStringWidth() + 30)
 		end
 	end,
-	
+
 	["SetAutoWidth"] = function(self, autoWidth)
 		self.autoWidth = autoWidth
 		if self.autoWidth then
@@ -71,64 +66,15 @@ local methods = {
 		else
 			self.frame:Enable()
 		end
-	end,
-
-	["SetFontObject"] = function(self, font)
-		self.frame:SetNormalFontObject(font or GameFontNormal)
-	end,
-
-	["SetHighlightFontObject"] = function(self, font)
-		self.frame:SetHighlightFontObject(font or GameFontHighlight)
-	end,
-
-	["SetStyle"] = function(self, style)
-		self.style = style or "default"
-	end,
-
-	["ApplySkin"] = function(self)
-		local SkinData = ZGV.UI.SkinData
-		local CHAIN=ZGV.ChainCall
-
-		if not SkinData("StyleAceGUI") then return end
-
-		self:SetHeight(24)
-
-		CHAIN(self.frame)
-			:SetBackdrop(SkinData("AceGUIButtonTexture"))
-			:SetBackdropColor(unpack(SkinData("AceGUIButtonTextureColor")))
-			:SetBackdropBorderColor(unpack(SkinData("AceGUIButtonTextureColor")))
-
-
-		if self.style=="Accent" then
-			CHAIN(self.frame)
-			:SetBackdropColor(unpack(SkinData("Accent")))
-			:SetBackdropBorderColor(unpack(SkinData("Accent")))
-		end
-
-		self.text:SetTextColor(unpack(SkinData("AceGUIButtonTextColor")))
-
-		CHAIN(self.frame:GetHighlightTexture())
-			:SetTexture(ZGV.SKINSDIR.."white")
-			:SetVertexColor(1,1,1,0.2)
-			:SetTexCoord(0,1,0,1)
-			:ClearAllPoints()
-			:SetPoint("TOPLEFT",0,-3)
-			:SetPoint("BOTTOMRIGHT",0,7)
-
-		self.frame.Left:Hide()
-		self.frame.Middle:Hide()
-		self.frame.Right:Hide()
-
-
-	end,
+	end
 }
 
 --[[-----------------------------------------------------------------------------
 Constructor
 -------------------------------------------------------------------------------]]
 local function Constructor()
-	local name = AceGUI.Prefix.."Button" .. AceGUI:GetNextWidgetNum(Type)
-	local frame = CreateFrame("Button", name, UIParent, "UIPanelButtonTemplate,BackdropTemplate")
+	local name = "AceGUI30Button" .. AceGUI:GetNextWidgetNum(Type)
+	local frame = CreateFrame("Button", name, UIParent, "UIPanelButtonTemplate")
 	frame:Hide()
 
 	frame:EnableMouse(true)

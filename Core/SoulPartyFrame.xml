@@ -1,5 +1,5 @@
 <Ui xmlns='http://www.blizzard.com/wow/ui/'>
-	<Frame name="SoulairePartyFrame" mixin="SoulairePartyFrameMixin" inherits="VerticalLayoutFrame, PingTopLevelPassThroughAttributeTemplate" frameStrata="LOW" parent="UIParent" toplevel="true">
+	<Frame name="SoulPartyFrame" mixin="SoulPartyFrameMixin" inherits="VerticalLayoutFrame, PingTopLevelPassThroughAttributeTemplate, SecureGroupHeaderTemplate" frameStrata="LOW" parent="UIParent" toplevel="true">
 		<KeyValues>
 			<KeyValue key="bottomPadding" value="2" type="number"/>
 			<KeyValue key="spacing" value="-10" type="number"/>

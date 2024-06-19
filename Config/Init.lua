@@ -23,8 +23,8 @@ function SPF:OnInitialize()
     -- Assign DB to a global variable
     SPF_DB = self.db.profile;
 
-    SoulairePartyFrame_UpdateSettingFrameSize()
-	SoulairePartyFrame_UpdateSettingFramePoint()
+    SoulPartyFrame_UpdateSettingFrameSize()
+	SoulPartyFrame_UpdateSettingFramePoint()
 
-    SoulairePartyFrame:Show()
+    SoulPartyFrame:Show()
 end

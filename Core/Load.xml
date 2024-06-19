@@ -1,8 +1,10 @@
-<Ui xmlns='http://www.blizzard.com/wow/ui/'>
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+    <Include file='Modules/Load.xml'/>
     <Script file='HideBlizzard.lua'/>
-    <Script file='SoulairePartyFrame.lua'/>
-    <Script file='SoulairePartyMemberFrame.lua'/>
-    <Include file='SoulairePartyMemberFrameTemplate.xml'/>
-    <Include file='SoulairePartyFrame.xml'/>
+    <Script file='SoulPartyFrame.lua'/>
+    <Script file='SoulPartyMemberFrame.lua'/>
+    <Include file='SoulPartyMemberFrameTemplate.xml'/>
+    <Include file='SoulPartyFrame.xml'/>
     <Script file='PartyAurasMasque.lua'/>
-  </Ui>
+</Ui>

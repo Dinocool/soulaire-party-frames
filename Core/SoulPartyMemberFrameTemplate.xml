@@ -1,28 +1,11 @@
 <Ui xmlns='http://www.blizzard.com/wow/ui/'>
-	<Button name="SoulairePartyMemberFrameTemplate" mixin="SoulairePartyMemberFrameMixin" hidden="true" inherits="SecureUnitButtonTemplate, PingableUnitFrameTemplate" virtual="true">
+	<Button name="SoulPartyMemberFrameTemplate" mixin="SoulPartyMemberFrameMixin" hidden="true" inherits="SecureUnitButtonTemplate, PingableUnitFrameTemplate" virtual="true">
 		<Size x="232" y="100"/>
 		<KeyValues>
 			<KeyValue key="disablePortraitMask" value="true" type="boolean"/>
 			<KeyValue key="frameType" value="Party" type="string"/>
 		</KeyValues>
 		<Layers>
-			<Layer level="BACKGROUND">
-				<Texture parentKey="Portrait">
-					<Size x="60" y="60"/>
-					<Anchors>
-						<Anchor point="TOPLEFT" x="24" y="-19"/>
-					</Anchors>
-				</Texture>
-				<MaskTexture parentKey="PortraitMask" atlas="UI-HUD-UnitFrame-Player-Portrait-Mask" hWrapMode="CLAMPTOBLACKADDITIVE" vWrapMode="CLAMPTOBLACKADDITIVE">
-					<Size x="60" y="60"/>
-					<MaskedTextures>
-						<MaskedTexture childKey="Portrait"/>
-					</MaskedTextures>
-					<Anchors>
-						<Anchor point="TOPLEFT" x="24" y="-19"/>
-					</Anchors>
-				</MaskTexture>
-			</Layer>
 			<Layer level="ARTWORK">
 				<Texture parentKey="Texture" atlas="UI-HUD-UnitFrame-Player-PortraitOn" useAtlasSize="true" texelSnappingBias="0.0" snapToPixelGrid="false">
 					<Anchors>
@@ -64,6 +47,23 @@
 			</Layer>
 		</Layers>
 		<Frames>
+			<Frame parentKey="PortraitFrame" inherits="SecureFrameParentPropagationTemplate" mixin="SoulPortraitMixin" 	>
+				<Size x="60" y="60"/>
+				<Anchors>
+					<Anchor point="TOPLEFT" x="24" y="-19"/>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture parentKey="Portrait">
+						</Texture>
+						<MaskTexture parentKey="PortraitMask" atlas="UI-HUD-UnitFrame-Player-Portrait-Mask" hWrapMode="CLAMPTOBLACKADDITIVE" vWrapMode="CLAMPTOBLACKADDITIVE">
+							<MaskedTextures>
+								<MaskedTexture childKey="Portrait"/>
+							</MaskedTextures>
+						</MaskTexture>
+					</Layer>
+				</Layers>
+			</Frame>
 			<Frame parentKey="DropDown" inherits="UIDropDownMenuTemplate" id="1" hidden="true">
 				<Size x="10" y="10"/>
 				<Anchors>
@@ -75,10 +75,10 @@
 					<Anchor point="LEFT" relativeKey="$parent" relativePoint="RIGHT" x="13" y="5"/>
 				</Anchors>
 			</Frame>
-			<StatusBar parentKey="HealthBar" inherits="TextStatusBar, SecureFrameParentPropagationTemplate" enableMouseMotion="true" drawLayer="BACKGROUND">
-				<Size x="124" y="20"/>
+			<StatusBar parentKey="HealthBar" mixin="SoulHealthBarMixin" inherits="SecureFrameParentPropagationTemplate" enableMouseMotion="true" drawLayer="BACKGROUND">
+				<Size x="124" y="21"/>
 				<Anchors>
-					<Anchor point="TOPLEFT" x="85" y="-40"/>
+					<Anchor point="TOPLEFT" x="85" y="-41"/>
 				</Anchors>
 				<Frames>
 					<Frame parentKey="MyHealPredictionBar" inherits="PartyFrameBarSegmentTemplate, MyHealPredictionBarTemplate"/>
@@ -116,6 +116,7 @@
 					</Layer>
 					<Layer level="OVERLAY" textureSubLevel="2">
 						<MaskTexture parentKey="HealthBarMask" atlas="UI-HUD-UnitFrame-Player-PortraitOn-Bar-Health-Mask" useAtlasSize="true" hWrapMode="CLAMPTOBLACKADDITIVE" vWrapMode="CLAMPTOBLACKADDITIVE">
+							<Size x="124" y="30"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="-2" y="6"/>
 							</Anchors>
@@ -134,14 +135,11 @@
 						</MaskTexture>
 					</Layer>
 				</Layers>
+				<!--
 				<Scripts>
 					<OnLoad>
-						self:InitializeTextStatusBar();
-						self.textLockable = 1;
-						self.lockColor = true;
-						self.cvar = "statusText";
-						self.cvarLabel = "STATUS_TEXT_PARTY";
-						self:SetMouseClickEnabled(false);
+						self:SetMouseClickEnabled(false)
+						self:OnLoad()
 					</OnLoad>
 					<OnEnter inherit="prepend">
 						self:GetParent():OnEnter();
@@ -155,48 +153,50 @@
 					<OnSizeChanged>
 						UnitFrameHealPredictionBars_UpdateSize(self:GetParent());
 					</OnSizeChanged>
+					<OnValueChanged>
+						SOUL_TextStatusBar_OnValueChanged(self);
+					</OnValueChanged>
 				</Scripts>
+				-->
 				<BarTexture parentKey="HealthBarTexture" atlas="UI-HUD-UnitFrame-Player-PortraitOn-Bar-Health"/>
 			</StatusBar>
-			<StatusBar parentKey="ManaBar" inherits="TextStatusBar, SecureFrameParentPropagationTemplate">
-				<Size x="124" y="10"/>
+			<StatusBar parentKey="ManaBar" mixin="SoulManaBarMixin" inherits="SecureFrameParentPropagationTemplate">
+				<Size x="129" y="10"/>
 				<Anchors>
-					<Anchor point="TOPLEFT" x="85" y="-61"/>
+					<Anchor point="TOPLEFT" x="81" y="-61"/>
 				</Anchors>
 				<Layers>
 					<Layer level="OVERLAY" textureSubLevel="1">
-						<FontString parentKey="CenterText" inherits="TextStatusBarTextLarge">
+						<FontString parentKey="CenterText" inherits="SystemFont_Shadow_Small">
 							<Anchors>
 								<Anchor point="CENTER" x="1" y="0"/>
 							</Anchors>
 						</FontString>
-						<FontString parentKey="LeftText" inherits="TextStatusBarTextLarge">
+						<FontString parentKey="LeftText" inherits="SystemFont_Shadow_Small">
 							<Anchors>
-								<Anchor point="LEFT" x="2" y="0"/>
+								<Anchor point="LEFT" x="8" y="0"/>
 							</Anchors>
 						</FontString>
-						<FontString parentKey="RightText" inherits="TextStatusBarTextLarge">
+						<FontString parentKey="RightText" inherits="SystemFont_Shadow_Small">
 							<Anchors>
-								<Anchor point="RIGHT" x="-2" y="0"/>
+								<Anchor point="RIGHT" x="-4" y="0"/>
 							</Anchors>
 						</FontString>
 					</Layer>
 					<Layer level="OVERLAY" textureSubLevel="2">
 						<MaskTexture parentKey="ManaBarMask" atlas="UI-HUD-UnitFrame-Player-PortraitOn-Bar-Mana-Mask" useAtlasSize="true" hWrapMode="CLAMPTOBLACKADDITIVE" vWrapMode="CLAMPTOBLACKADDITIVE">
+							<Size x="128" y="10"/>
 							<Anchors>
-								<Anchor point="TOPLEFT" x="-2" y="2"/>
+								<Anchor point="TOPLEFT" x="2" y="2"/>
 							</Anchors>
 						</MaskTexture>
 					</Layer>
 				</Layers>
+				<!--
 				<Scripts>
 					<OnLoad>
-						self:InitializeTextStatusBar();
-						self.textLockable = 1;
-						self.lockColor = true;
-						self.cvar = "statusText";
-						self.cvarLabel = "STATUS_TEXT_PARTY";
 						self:SetMouseClickEnabled(false);
+						SOUL_TextStatusBar_Initialize(self);
 					</OnLoad>
 					<OnEnter inherit="prepend">
 						self:GetParent():OnEnter();
@@ -204,7 +204,11 @@
 					<OnLeave inherit="prepend">
 						self:GetParent():OnLeave();
 					</OnLeave>
+					<OnValueChanged>
+						SOUL_TextStatusBar_Initialize(self);
+					</OnValueChanged>
 				</Scripts>
+			-->
 				<BarTexture atlas="UI-HUD-UnitFrame-Player-PortraitOn-Bar-Mana"/>
 			</StatusBar>
 			<Frame parentKey="PartyMemberOverlay" setAllPoints="true">
@@ -219,23 +223,23 @@
 					<Layer level="OVERLAY">
 						<Texture parentKey="LeaderIcon" atlas="UI-HUD-UnitFrame-Player-Group-LeaderIcon" useAtlasSize="true" hidden="true">
 							<Anchors>
-								<Anchor point="TOPLEFT" x="86" y="-10"/>
+								<Anchor point="TOPLEFT" x="192" y="-25"/>
 							</Anchors>
 						</Texture>
 						<Texture parentKey="GuideIcon" atlas="UI-HUD-UnitFrame-Player-Group-GuideIcon" useAtlasSize="true" hidden="true">
 							<Anchors>
-								<Anchor point="TOPLEFT" x="86" y="-10"/>
+								<Anchor point="TOPLEFT" x="200" y="-22"/>
 							</Anchors>
 						</Texture>
 						<Texture parentKey="PVPIcon" hidden="true" useAtlasSize="true">
 							<Anchors>
-								<Anchor point="TOP" relativeKey="$parent" relativePoint="TOPLEFT" x="25" y="-50"/>
+								<Anchor point="TOP" relativeKey="$parent" relativePoint="TOPLEFT" x="30" y="-50"/>
 							</Anchors>
 						</Texture>
 						<Texture parentKey="Disconnect" file="Interface\CharacterFrame\Disconnect-Icon" hidden="true">
 							<Size x="64" y="64"/>
 							<Anchors>
-								<Anchor point="LEFT" x="-7" y="-1"/>
+								<Anchor point="LEFT" x="20" y="-1"/>
 							</Anchors>
 						</Texture>
 						<Texture parentKey="RoleIcon" atlas="roleicon-tiny-tank" hidden="true" texelSnappingBias="0.0" snapToPixelGrid="false">

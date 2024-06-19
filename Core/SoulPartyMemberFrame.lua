@@ -1,12 +1,12 @@
-SoulairePartyMemberFrameMixin={}
+SoulPartyMemberFrameMixin={}
 
-function SoulairePartyMemberFrameMixin:GetUnit()
+function SoulPartyMemberFrameMixin:GetUnit()
 	-- Override unit is set when we get in a vehicle
 	-- Override unit will always be the original (most likely player/party member)
 	return self.overrideUnit or self.unit
 end
 
-function SoulairePartyMemberFrameMixin:UpdateArt()
+function SoulPartyMemberFrameMixin:UpdateArt()
 	if UnitHasVehicleUI(self.unit) and UnitIsConnected(self:GetUnit()) then
 		self:ToVehicleArt()
 	else
@@ -14,7 +14,7 @@ function SoulairePartyMemberFrameMixin:UpdateArt()
 	end
 end
 
-function SoulairePartyMemberFrameMixin:ToPlayerArt()
+function SoulPartyMemberFrameMixin:ToPlayerArt()
     if self:IsForbidden() then return end
     if InCombatLockdown() then return end
 
@@ -42,17 +42,17 @@ function SoulairePartyMemberFrameMixin:ToPlayerArt()
 
 	self:UpdateNameTextAnchors()
 
-	securecall("UnitFrame_SetUnit", self, self.unit, self.HealthBar, self.ManaBar)
-	securecall("UnitFrame_Update", self, true)
+	--securecall("UnitFrame_SetUnit", self, self.unit, self.HealthBar, self.ManaBar)
+	--securecall("UnitFrame_Update", self, true)
 end
 
-function SoulairePartyMemberFrameMixin:NoPowerBarPlayerArt()
+function SoulPartyMemberFrameMixin:NoPowerBarPlayerArt()
     self.Texture:SetAtlas("plunderstorm-UI-HUD-UnitFrame-Player-PortraitOn-2x")
 
     self.Flash:SetAtlas("plunderstorm-UI-HUD-UnitFrame-Player-PortraitOn-InCombat-2x", TextureKitConstants.UseAtlasSize)
     self.Flash:SetPoint("CENTER", self, "CENTER", -1.5, 1)
     self.HealthBar:SetWidth(124)
-    self.HealthBar:SetPoint("TOPLEFT", 85, -41)
+    --self.HealthBar:SetPoint("TOPLEFT", 85, -41)
 
     self.HealthBar.HealthBarMask:SetPoint("TOPLEFT", self.HealthBar, "TOPLEFT", -2, -1)
 
@@ -65,7 +65,7 @@ function SoulairePartyMemberFrameMixin:NoPowerBarPlayerArt()
     self.ManaBar:SetWidth(0)
 end
 
-function SoulairePartyMemberFrameMixin:PowerBarPlayerArt()
+function SoulPartyMemberFrameMixin:PowerBarPlayerArt()
     self.Texture:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn")
 
     self.Flash:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-InCombat", TextureKitConstants.UseAtlasSize)
@@ -79,17 +79,9 @@ function SoulairePartyMemberFrameMixin:PowerBarPlayerArt()
     self.HealthBar:SetHeight(19)
     self.HealthBar.HealthBarMask:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-Bar-Health-Mask")
     self.HealthBar.HealthBarMask:SetHeight(31)
-
-    self.ManaBar:SetHeight(10)
-    self.ManaBar:SetWidth(129)
-    self.ManaBar:SetPoint("TOPLEFT", 81, -61)
-
-    self.ManaBar.ManaBarMask:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-Bar-Mana-Mask", TextureKitConstants.UseAtlasSize)
-    self.ManaBar.ManaBarMask:SetPoint("TOPLEFT", self.ManaBar, "TOPLEFT", 2, 2)
-    self.ManaBar.ManaBarMask:SetWidth(128)
 end
 
-function SoulairePartyMemberFrameMixin:HealthBarArt()
+function SoulPartyMemberFrameMixin:HealthBarArt()
     local classHealth = true
     if SPF_DB then
         classHealth = SPF_DB.class_color_health_bars
@@ -109,7 +101,7 @@ function SoulairePartyMemberFrameMixin:HealthBarArt()
     self.HealthBar.OtherHealPredictionBar.Fill:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-Bar-Health-Status")
 end
 
-function SoulairePartyMemberFrameMixin:StatusArt()
+function SoulPartyMemberFrameMixin:StatusArt()
 
     self.StatusFlash:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-Status", TextureKitConstants.UseAtlasSize)
     self.StatusFlash:SetPoint("TOPLEFT", self, "TOPLEFT", 16, -14)
@@ -118,7 +110,7 @@ function SoulairePartyMemberFrameMixin:StatusArt()
     self:AddPulseAnimation(self.Flash)
 end
 
-function SoulairePartyMemberFrameMixin:AddPulseAnimation(frame)
+function SoulPartyMemberFrameMixin:AddPulseAnimation(frame)
     if not frame.PulseAnimation then
         frame.PulseAnimation = frame:CreateAnimationGroup()
         local animGroup = frame.PulseAnimation
@@ -134,7 +126,7 @@ function SoulairePartyMemberFrameMixin:AddPulseAnimation(frame)
 end
 
 
-function SoulairePartyMemberFrameMixin:ToVehicleArt()
+function SoulPartyMemberFrameMixin:ToVehicleArt()
     if self:IsForbidden() then return end
     if InCombatLockdown() then return end
 
@@ -169,11 +161,11 @@ function SoulairePartyMemberFrameMixin:ToVehicleArt()
 
 	self:UpdateNameTextAnchors()
 
-	securecall("UnitFrame_SetUnit", self, self.petUnitToken, self.HealthBar, self.ManaBar)
-	securecall("UnitFrame_Update", self, true)
+	--securecall("UnitFrame_SetUnit", self, self.petUnitToken, self.HealthBar, self.ManaBar)
+	--securecall("UnitFrame_Update", self, true)
 end
 
-function SoulairePartyMemberFrameMixin:UpdateHealthBarTextAnchors()
+function SoulPartyMemberFrameMixin:UpdateHealthBarTextAnchors()
 	local healthBarTextOffsetX = 0
 	local healthBarTextOffsetY = 0
 	if (LOCALE_koKR) then
@@ -187,7 +179,7 @@ function SoulairePartyMemberFrameMixin:UpdateHealthBarTextAnchors()
 	self.HealthBar.RightText:SetPoint("RIGHT", self.HealthBar, "RIGHT", -healthBarTextOffsetX, healthBarTextOffsetY)
 end
 
-function SoulairePartyMemberFrameMixin:UpdateManaBarTextAnchors()
+function SoulPartyMemberFrameMixin:UpdateManaBarTextAnchors()
 	local manaBarTextOffsetY = 0
 	if (LOCALE_koKR) then
 		manaBarTextOffsetY = 1
@@ -205,7 +197,7 @@ function SoulairePartyMemberFrameMixin:UpdateManaBarTextAnchors()
 	end
 end
 
-function SoulairePartyMemberFrameMixin:UpdateNameTextAnchors()
+function SoulPartyMemberFrameMixin:UpdateNameTextAnchors()
 	if(self.state == "player") then
 		self.Name:SetPoint("TOPLEFT", 88, -27)
 	else
@@ -213,32 +205,22 @@ function SoulairePartyMemberFrameMixin:UpdateNameTextAnchors()
 	end
 end
 
-function SoulairePartyMemberFrameMixin:Setup()
+function SoulPartyMemberFrameMixin:Setup()
     self.soulaireFrame = true
-	self.unitToken = "party"..self.layoutIndex
+	self.unit = "party"..self.layoutIndex
 	self.petUnitToken = "partypet"..self.layoutIndex
 
 	self.debuffCountdown = 0
 	self.numDebuffs = 0
 
-	UnitFrame_Initialize(self, self.unitToken, self.Name, self.frameType, self.Portrait,
-		   self.HealthBar,
-		   self.HealthBar.CenterText,
-		   self.ManaBar,
-		   self.ManaBar.CenterText,
-		   self.StatusFlash, nil, nil,
-		   self.HealthBar.MyHealPredictionBar,
-		   self.HealthBar.OtherHealPredictionBar,
-		   self.HealthBar.TotalAbsorbBar,
-		   self.HealthBar.OverAbsorbGlow,
-		   self.HealthBar.OverHealAbsorbGlow,
-		   self.HealthBar.HealAbsorbBar)
-
-	self.HealthBar:SetBarTextZeroText(DEAD)
-
 	self.statusCounter = 0
 	self.statusSign = -1
 	self.unitHPPercent = 1
+
+	--Setup the healthbar
+	self.HealthBar:Initialize(self.unit,true)
+	self.ManaBar:Initialize(self.unit,true)
+	self.PortraitFrame:Initialize(self.unit)
 
 	-- Mask the various bar assets, to avoid any overflow with the frame shape.
 	self.HealthBar:GetStatusBarTexture():AddMaskTexture(self.HealthBar.HealthBarMask)
@@ -246,8 +228,33 @@ function SoulairePartyMemberFrameMixin:Setup()
 	self.ManaBar:GetStatusBarTexture():AddMaskTexture(self.ManaBar.ManaBarMask)
 
 	self:CreateAuras(self.layoutIndex)
+	self:UpdateName()
 	self:UpdateMember()
 	self:UpdateLeader()
+	self:RegisterEvents()
+	
+	local showmenu = function()
+		ToggleDropDownMenu(1, nil, self.DropDown, self, 47, 15)
+	end
+	SecureUnitButton_OnLoad(self, self.unit, showmenu)
+
+	self:UpdateArt()
+	self:SetFrameLevel(2)
+	self:UpdateNotPresentIcon()
+
+	UIDropDownMenu_SetInitializeFunction(self.DropDown, PartyMemberFrameMixin.InitializePartyFrameDropDown)
+	UIDropDownMenu_SetDisplayMode(self.DropDown, "MENU")
+
+	UnitPowerBarAlt_Initialize(self.PowerBarAlt, self.unit, 0.5, "GROUP_ROSTER_UPDATE")
+	
+	--Range Check
+	SPF:ScheduleRepeatingTimer(self.UpdateDistance,0.2,self)
+
+	self.initialized = true
+end
+
+-- Registers Events this frame should listen to
+function SoulPartyMemberFrameMixin:RegisterEvents()
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
 	self:RegisterEvent("GROUP_ROSTER_UPDATE")
 	self:RegisterEvent("UPDATE_ACTIVE_BATTLEFIELD")
@@ -270,29 +277,12 @@ function SoulairePartyMemberFrameMixin:Setup()
 	self:RegisterEvent("UNIT_FLAGS")
 	self:RegisterEvent("UNIT_OTHER_PARTY_CHANGED")
 	self:RegisterEvent("INCOMING_SUMMON_CHANGED")
-	self:RegisterUnitEvent("UNIT_AURA", self.unitToken, self.petUnitToken)
-	self:RegisterUnitEvent("UNIT_PET",  self.unitToken, self.petUnitToken)
-	local showmenu = function()
-		ToggleDropDownMenu(1, nil, self.DropDown, self, 47, 15)
-	end
-	SecureUnitButton_OnLoad(self, self.unitToken, showmenu)
-
-	self:UpdateArt()
-	self:SetFrameLevel(2)
-	self:UpdateNotPresentIcon()
-
-	UIDropDownMenu_SetInitializeFunction(self.DropDown, PartyMemberFrameMixin.InitializePartyFrameDropDown)
-	UIDropDownMenu_SetDisplayMode(self.DropDown, "MENU")
-
-	UnitPowerBarAlt_Initialize(self.PowerBarAlt, self.unitToken, 0.5, "GROUP_ROSTER_UPDATE")
-	
-	--Range Check
-	SPF:ScheduleRepeatingTimer(self.UpdateDistance,0.2,self)
-
-	self.initialized = true
+	self:RegisterUnitEvent("UNIT_NAME_UPDATE",self.unit)
+	self:RegisterUnitEvent("UNIT_AURA", self.unit, self.petUnitToken)
+	self:RegisterUnitEvent("UNIT_PET",  self.unit, self.petUnitToken)
 end
 
-function SoulairePartyMemberFrameMixin:UpdateVoiceActivityNotification()
+function SoulPartyMemberFrameMixin:UpdateVoiceActivityNotification()
 	if self.voiceNotification then
 		self.voiceNotification:ClearAllPoints()
 		if self.NotPresentIcon:IsShown() then
@@ -303,31 +293,39 @@ function SoulairePartyMemberFrameMixin:UpdateVoiceActivityNotification()
 	end
 end
 
-function SoulairePartyMemberFrameMixin:VoiceActivityNotificationCreatedCallback(notification)
+function SoulPartyMemberFrameMixin:VoiceActivityNotificationCreatedCallback(notification)
 	self.voiceNotification = notification
 	self.voiceNotification:SetParent(self)
 	self:UpdateVoiceActivityNotification()
 	notification:Show()
 end
 
-function SoulairePartyMemberFrameMixin:UpdateMember()
+function SoulPartyMemberFrameMixin:UpdateMember()
 	local showFrame
-	if EditModeManagerFrame:ArePartyFramesForcedShown() and not UnitExists(self.unitToken) then
-		securecall("UnitFrame_SetUnit", self, "player", self.HealthBar, self.ManaBar)
+	if EditModeManagerFrame:ArePartyFramesForcedShown() then
 		showFrame = true
 	else
-		securecall("UnitFrame_SetUnit", self, self.unitToken, self.HealthBar, self.ManaBar)
-		showFrame = UnitExists(self.unitToken)
+		showFrame = UnitExists(self.unit)
 	end
+
 	if showFrame then
 		self:Show()
-
 		if VoiceActivityManager then
 			local guid = UnitGUID(self:GetUnit())
 			VoiceActivityManager:RegisterFrameForVoiceActivityNotifications(self, guid, nil, "VoiceActivityNotificationPartyTemplate", "Button", PartyMemberFrameMixin.VoiceActivityNotificationCreatedCallback)
 		end
 
-		securecall("UnitFrame_Update", self, true)
+		self:UpdateName()
+		self.HealthBar:EventUpdate()
+		self.ManaBar:UpdatePowerType()
+		self:UpdateDistance()
+		self:UpdatePvPStatus()
+		self:UpdateVoiceStatus()
+		self:UpdateReadyCheck()
+		self:UpdateOnlineStatus()
+		self:UpdateNotPresentIcon()
+		self:UpdateArt()
+		self:UpdateAuras()
 	else
 		if VoiceActivityManager then
 			VoiceActivityManager:UnregisterFrameForVoiceActivityNotifications(self)
@@ -336,18 +334,9 @@ function SoulairePartyMemberFrameMixin:UpdateMember()
 		self:Hide()
 	end
 
-	self:UpdateDistance()
-
-	self:UpdatePvPStatus()
-	self:UpdateVoiceStatus()
-	self:UpdateReadyCheck()
-	self:UpdateOnlineStatus()
-	self:UpdateNotPresentIcon()
-	self:UpdateArt()
-	self:UpdateAuras()
 end
 
-function SoulairePartyMemberFrameMixin:UpdateMemberHealth(elapsed)
+function SoulPartyMemberFrameMixin:UpdateMemberHealth(elapsed)
 	if ( (self.unitHPPercent > 0) and (self.unitHPPercent <= 0.2) ) then
 		local alpha = 255
 		local counter = self.statusCounter + elapsed
@@ -365,12 +354,12 @@ function SoulairePartyMemberFrameMixin:UpdateMemberHealth(elapsed)
 		else
 			alpha = (255 - (counter * 256)) / 255
 		end
-		self.Portrait:SetAlpha(alpha)
+		self.PortraitFrame.PortraitFrame.Portrait:SetAlpha(alpha)
 	end
 end
 
-function SoulairePartyMemberFrameMixin:UpdateDistance()
-	inRange, _ = UnitInRange(self.unit)
+function SoulPartyMemberFrameMixin:UpdateDistance()
+	local inRange, _ = UnitInRange(self.unit)
 
     if inRange then
         self:SetAlpha(1.0)
@@ -379,7 +368,7 @@ function SoulairePartyMemberFrameMixin:UpdateDistance()
     end
 end
 
-function SoulairePartyMemberFrameMixin:UpdateLeader()
+function SoulPartyMemberFrameMixin:UpdateLeader()
 	local leaderIcon = self.PartyMemberOverlay.LeaderIcon
 	local guideIcon = self.PartyMemberOverlay.GuideIcon
 
@@ -397,7 +386,7 @@ function SoulairePartyMemberFrameMixin:UpdateLeader()
 	end
 end
 
-function SoulairePartyMemberFrameMixin:UpdatePvPStatus()
+function SoulPartyMemberFrameMixin:UpdatePvPStatus()
 	local icon = self.PartyMemberOverlay.PVPIcon
 	local factionGroup = UnitFactionGroup(self:GetUnit())
 	if UnitIsPVPFreeForAll(self:GetUnit()) then
@@ -412,7 +401,7 @@ function SoulairePartyMemberFrameMixin:UpdatePvPStatus()
 	end
 end
 
-function SoulairePartyMemberFrameMixin:UpdateAssignedRoles()
+function SoulPartyMemberFrameMixin:UpdateAssignedRoles()
 	local icon = self.PartyMemberOverlay.RoleIcon
 	local role = UnitGroupRolesAssignedEnum(self:GetUnit())
 
@@ -430,7 +419,7 @@ function SoulairePartyMemberFrameMixin:UpdateAssignedRoles()
 	end
 end
 
-function SoulairePartyMemberFrameMixin:UpdateVoiceStatus()
+function SoulPartyMemberFrameMixin:UpdateVoiceStatus()
 	if not UnitName(self:GetUnit()) then
 		--No need to update if the frame doesn't have a unit.
 		return
@@ -448,7 +437,7 @@ function SoulairePartyMemberFrameMixin:UpdateVoiceStatus()
 	end
 end
 
-function SoulairePartyMemberFrameMixin:UpdateReadyCheck()
+function SoulPartyMemberFrameMixin:UpdateReadyCheck()
 	local readyCheckFrame = self.ReadyCheck
 	local readyCheckStatus = GetReadyCheckStatus(self:GetUnit())
 	if UnitName(self:GetUnit()) and UnitIsConnected(self:GetUnit()) and readyCheckStatus then
@@ -464,7 +453,7 @@ function SoulairePartyMemberFrameMixin:UpdateReadyCheck()
 	end
 end
 
-function SoulairePartyMemberFrameMixin:UpdateNotPresentIcon()
+function SoulPartyMemberFrameMixin:UpdateNotPresentIcon()
 	if UnitInOtherParty(self:GetUnit()) then
 		self:SetAlpha(0.6)
 		self.NotPresentIcon.texture:SetAtlas("groupfinder-eye-single", true)
@@ -503,7 +492,8 @@ function SoulairePartyMemberFrameMixin:UpdateNotPresentIcon()
 			self.NotPresentIcon.tooltip = PartyUtil.GetPhasedReasonString(phaseReason, self:GetUnit())
 			self.NotPresentIcon:Show()
 		else
-			self:SetAlpha(1)
+			--Set Alpha based on distance
+			self:UpdateDistance()
 			self.NotPresentIcon:Hide()
 		end
 	end
@@ -511,14 +501,14 @@ function SoulairePartyMemberFrameMixin:UpdateNotPresentIcon()
 	self:UpdateVoiceActivityNotification()
 end
 
-function SoulairePartyMemberFrameMixin:OnEvent(event, ...)
-	securecall("UnitFrame_OnEvent", self, event, ...)
+function SoulPartyMemberFrameMixin:OnEvent(event, ...)
+	--securecall("UnitFrame_OnEvent", self, event, ...)
 
 	local arg1, arg2, arg3 = ...
 	local selfID = self.layoutIndex
 
-	if event == "UNIT_NAME_UPDATE" then
-		securecall("UnitFrame_Update", self, true)
+	if event == "UNIT_NAME_UPDATE" and arg1 == self.unit then
+		self:UpdateName()
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		if UnitExists(self:GetUnit()) then
 			self:UpdateMember()
@@ -583,21 +573,32 @@ function SoulairePartyMemberFrameMixin:OnEvent(event, ...)
 	end
 end
 
-function SoulairePartyMemberFrameMixin:OnUpdate(elapsed)
+function SoulPartyMemberFrameMixin:UpdateName()
+	local nameText = GetUnitName(self.unit);
+	if ( nameText ) then
+		if ( UnitInPartyIsAI(self.unit) and C_LFGInfo.IsInLFGFollowerDungeon() ) then
+			nameText = LFG_FOLLOWER_NAME_PREFIX:format(nameText);
+		end
+
+		self.Name:SetText(nameText);
+	end
+end
+
+function SoulPartyMemberFrameMixin:OnUpdate(elapsed)
 	if self.initialized then
 		self:UpdateMemberHealth(elapsed)
 	end
 end
 
-function SoulairePartyMemberFrameMixin:OnEnter()
+function SoulPartyMemberFrameMixin:OnEnter()
 	UnitFrame_OnEnter(self)
 end
 
-function SoulairePartyMemberFrameMixin:OnLeave()
+function SoulPartyMemberFrameMixin:OnLeave()
 	UnitFrame_OnLeave(self)
 end
 
-function SoulairePartyMemberFrameMixin:UpdateOnlineStatus()
+function SoulPartyMemberFrameMixin:UpdateOnlineStatus()
 	local healthBar = self.HealthBar
 
 	if not UnitIsConnected(self:GetUnit()) then
@@ -606,16 +607,16 @@ function SoulairePartyMemberFrameMixin:UpdateOnlineStatus()
 
 		healthBar:SetValue(unitHPMax)
 		healthBar:SetStatusBarDesaturated(true)
-		SetDesaturation(self.Portrait, true)
+		SetDesaturation(self.PortraitFrame.Portrait, true)
 		self.PartyMemberOverlay.Disconnect:Show()
 	else
 		healthBar:SetStatusBarDesaturated(false)
-		SetDesaturation(self.Portrait, false)
+		SetDesaturation(self.PortraitFrame.Portrait, false)
 		self.PartyMemberOverlay.Disconnect:Hide()
 	end
 end
 
-function SoulairePartyMemberFrameMixin:PartyMemberHealthCheck(value)
+function SoulPartyMemberFrameMixin:PartyMemberHealthCheck(value)
 	local unitHPMin, unitHPMax, unitCurrHP
 	unitHPMin, unitHPMax = self.HealthBar:GetMinMaxValues()
 
@@ -636,22 +637,22 @@ function SoulairePartyMemberFrameMixin:PartyMemberHealthCheck(value)
 	end
 
 	if unitIsDead then
-		self.Portrait:SetVertexColor(0.35, 0.35, 0.35, 1.0)
+		self.PortraitFrame.Portrait:SetVertexColor(0.35, 0.35, 0.35, 1.0)
 	elseif unitIsGhost then
-		self.Portrait:SetVertexColor(0.2, 0.2, 0.75, 1.0)
+		self.PortraitFrame.Portrait:SetVertexColor(0.2, 0.2, 0.75, 1.0)
 	elseif (self.unitHPPercent > 0) and (self.unitHPPercent <= 0.2) then
-		self.Portrait:SetVertexColor(1.0, 0.0, 0.0)
+		self.PortraitFrame.Portrait:SetVertexColor(1.0, 0.0, 0.0)
 	else
-		self.Portrait:SetVertexColor(1.0, 1.0, 1.0, 1.0)
+		self.PortraitFrame.Portrait:SetVertexColor(1.0, 1.0, 1.0, 1.0)
 	end
 end
 
-function SoulairePartyMemberFrameMixin:InitializePartyFrameDropDown()
+function SoulPartyMemberFrameMixin:InitializePartyFrameDropDown()
 	local dropdown = UIDROPDOWNMENU_OPEN_MENU or self.DropDown
 	UnitPopup_ShowMenu(dropdown, "PARTY", "party"..dropdown:GetParent().layoutIndex)
 end
 
-function SoulairePartyMemberFrameMixin:UpdateAuras(unitAuraUpdateInfo)
+function SoulPartyMemberFrameMixin:UpdateAuras(unitAuraUpdateInfo)
 	local debuffsChanged = false;
 	local buffsChanged = false;
 
@@ -712,7 +713,7 @@ function SoulairePartyMemberFrameMixin:UpdateAuras(unitAuraUpdateInfo)
 	end
 end
 
-function SoulairePartyMemberFrameMixin:ParseAllAuras() 
+function SoulPartyMemberFrameMixin:ParseAllAuras() 
 	if self.debuffs == nil then
 		self.debuffs = TableUtil.CreatePriorityTable(AuraUtil.UnitFrameDebuffComparator, TableUtil.Constants.AssociativePriorityTable);
 		self.buffs = TableUtil.CreatePriorityTable(AuraUtil.DefaultAuraCompare, TableUtil.Constants.AssociativePriorityTable);
@@ -740,7 +741,7 @@ local function CreateAura(partyMember, auraIndex, auraType, anchor, x, y)
     local partyMemberAuraFrame = "SPF_PartyAuras"..partyMember..auraType
     local auraButtonName = partyMemberAuraFrame..auraIndex
 
-    local aura = CreateFrame("Button", auraButtonName, _G["SoulairePartyFrame"]["MemberFrame"..partyMember])
+    local aura = CreateFrame("Button", auraButtonName, _G["SoulPartyFrame"]["MemberFrame"..partyMember])
 
     aura:SetFrameLevel(7)
     aura:SetWidth(24)
@@ -748,7 +749,7 @@ local function CreateAura(partyMember, auraIndex, auraType, anchor, x, y)
     aura:SetID(auraIndex)
     aura:ClearAllPoints()
     if auraIndex == 1 then
-        aura:SetPoint("RIGHT", _G["SoulairePartyFrame"]["MemberFrame"..partyMember], anchor, x, y)
+        aura:SetPoint("RIGHT", _G["SoulPartyFrame"]["MemberFrame"..partyMember], anchor, x, y)
     else
         aura:SetPoint("LEFT", _G[partyMemberAuraFrame..auraIndex-1], "RIGHT", 6, 0)
     end
@@ -819,13 +820,12 @@ local function SetAura(aura, auraType, partyMember, auraIndex)
         local borderColor = {r=0.7, g=0.7, b=0.7}
         --auraButton.Border:Hide()
         if aura.isHarmful then
-			DevTool:AddData(aura)
             if not aura.dispelName then
                 aura.dispelName=""
             end
             borderColor = DebuffTypeColor[aura.dispelName]
             if (auraIndex == 1 and aura.dispelName ~= "") then
-                local partyFrame = _G["SoulairePartyFrame"]["MemberFrame"..partyMember]
+                local partyFrame = _G["SoulPartyFrame"]["MemberFrame"..partyMember]
                 partyFrame.Flash:Show()
                 partyFrame.Flash:SetVertexColor(borderColor.r, borderColor.g, borderColor.b)
             end
@@ -839,7 +839,7 @@ local function SetAura(aura, auraType, partyMember, auraIndex)
     end
 end
 
-function SoulairePartyMemberFrameMixin:AurasUpdate(partyMember,buffsChanged, debuffsChanged)
+function SoulPartyMemberFrameMixin:AurasUpdate(partyMember,buffsChanged, debuffsChanged)
     self.Flash:Hide()
     -- sort buffs by duration and add them from the shortest to the longest
     if buffsChanged and self.buffs then
@@ -854,9 +854,9 @@ function SoulairePartyMemberFrameMixin:AurasUpdate(partyMember,buffsChanged, deb
     end
 end
 
-function SoulairePartyMemberFrameMixin:CreateAuras(partyMember)
-    maxBuffs=10
-	maxDebuffs=10
+function SoulPartyMemberFrameMixin:CreateAuras(partyMember)
+    local maxBuffs=10
+	local maxDebuffs=10
     for auraIndex = 1, maxBuffs do
         CreateAura(partyMember, auraIndex, "Buff", "TOPRIGHT", 7, -32)
     end

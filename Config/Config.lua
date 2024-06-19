@@ -98,7 +98,7 @@ function SPF_Config:OnEnable()
     }
 
     -- Register Menu
-    LibStub('AceConfig-3.0'):RegisterOptionsTable('Soulaire Party Frames', options)
+    LibStub("AceConfig-3.0"):RegisterOptionsTable('Soulaire Party Frames', options)
     local SPF_ConfigPanel = LibStub('AceConfigDialog-3.0'):AddToBlizOptions('Soulaire Party Frames')
 
     -- Register Slash Command

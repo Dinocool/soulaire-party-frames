@@ -1,12 +1,12 @@
-SoulairePartyFrameMixin = {}
+SoulPartyFrameMixin = {}
 
-function SoulairePartyFrameMixin:OnLoad()
+function SoulPartyFrameMixin:OnLoad()
     local function PartyMemberFrameReset(framePool, frame)
 		frame.layoutIndex = nil
 		FramePool_HideAndClearAnchors(framePool, frame)
 	end
 
-    self.PartyMemberFramePool = CreateFramePool("BUTTON", self, "SoulairePartyMemberFrameTemplate", PartyMemberFrameReset)
+    self.PartyMemberFramePool = CreateFramePool("BUTTON", self, "SoulPartyMemberFrameTemplate", PartyMemberFrameReset)
 
 	self:RegisterEvent("GROUP_ROSTER_UPDATE")
     self:RegisterForDrag("LeftButton")
@@ -23,22 +23,22 @@ function SoulairePartyFrameMixin:OnLoad()
 		end
 	end)
 
-    if not SPF:IsHooked("UnitFrameHealPredictionBars_Update") then
-        SPF:SecureHook("UnitFrameHealPredictionBars_Update",UpdateHealPrediction)
-    end
+    --if not SPF:IsHooked("UnitFrameHealPredictionBars_Update") then
+    --    SPF:SecureHook("UnitFrameHealPredictionBars_Update",UpdateHealPrediction)
+    --end
 
-    SoulairePartyFrame_Lock()
+    SoulPartyFrame_Lock()
 end
 
-function SoulairePartyFrame_UpdateSettingFrameSize()
+function SoulPartyFrame_UpdateSettingFrameSize()
 	local scale = 1
 	if SPF_DB then
 		scale = SPF_DB.party_scale
 	end
-	SoulairePartyFrame:SetScale(scale)
+	SoulPartyFrame:SetScale(scale)
 end
 
-function SoulairePartyFrame_UpdateSettingFramePoint()
+function SoulPartyFrame_UpdateSettingFramePoint()
 	local point = "TOPLEFT"
 	local relativePoint = "TOPLEFT"
 	local x = 0
@@ -49,32 +49,31 @@ function SoulairePartyFrame_UpdateSettingFramePoint()
 		x = math.floor(SPF_DB.party_position_x)
 		y = math.floor(SPF_DB.party_position_y)
 	end
-	SoulairePartyFrame:ClearAllPoints()
-	SoulairePartyFrame:SetPoint(point, UIParent, relativePoint, x, y)
+	SoulPartyFrame:ClearAllPoints()
+	SoulPartyFrame:SetPoint(point, UIParent, relativePoint, x, y)
 end
 
-function SoulairePartyFrameMixin:OnShow()
+function SoulPartyFrameMixin:OnShow()
 	self:InitializePartyMemberFrames()
 	self:UpdatePartyFrames()
 	--Insert Into omnicd
 	if OmniCD and not self.injectedIntoOmni then
-		table.insert(OmniCD[1].unitFrameData,{ [1] = "SoulairePartyFrames",[2] = "SoulairePartyFrame",[3] = "unit",})
+		table.insert(OmniCD[1].unitFrameData,{ [1] = "SoulPartyFrames",[2] = "SoulPartyFrame",[3] = "unit",})
 		self.injectedIntoOmni=true
 	end
 end
 
-function SoulairePartyFrameMixin:OnEvent(event, ...)
+function SoulPartyFrameMixin:OnEvent(event, ...)
 	self:Layout()
 end
 
-function SoulairePartyFrameMixin:ShouldShow()
+function SoulPartyFrameMixin:ShouldShow()
 	return ShouldShowPartyFrames()
 end
 
-function SoulairePartyFrameMixin:InitializePartyMemberFrames()
+function SoulPartyFrameMixin:InitializePartyMemberFrames()
 	local memberFramesToSetup = {}
 
-	self:RegisterEvent("GROUP_ROSTER_UPDATE")
 	self:SetScript("OnEvent", function(self, event, ...)
 		self:UpdatePartyFrames()
 	end)
@@ -85,7 +84,7 @@ function SoulairePartyFrameMixin:InitializePartyMemberFrames()
 
 		-- Set for debugging purposes.
 		memberFrame:SetParentKey("MemberFrame"..i)
-		_G["SoulairePartyFrame"..i] = memberFrame
+		_G["SoulPartyFrame"..i] = memberFrame
 
 		memberFrame:SetAttribute("unit", "party"..i)
 		memberFrame:RegisterForClicks("AnyUp")
@@ -105,7 +104,7 @@ function SoulairePartyFrameMixin:InitializePartyMemberFrames()
 	self:UpdatePaddingAndLayout()
 end
 
-function SoulairePartyFrameMixin:UpdateMemberFrames()
+function SoulPartyFrameMixin:UpdateMemberFrames()
 	for memberFrame in self.PartyMemberFramePool:EnumerateActive() do
 		memberFrame:UpdateMember()
 	end
@@ -113,13 +112,13 @@ function SoulairePartyFrameMixin:UpdateMemberFrames()
 	self:Layout()
 end
 
-function SoulairePartyFrameMixin:HidePartyFrames()
+function SoulPartyFrameMixin:HidePartyFrames()
 	for memberFrame in self.PartyMemberFramePool:EnumerateActive() do
 		memberFrame:Hide()
 	end
 end
 
-function SoulairePartyFrameMixin:UpdatePaddingAndLayout()
+function SoulPartyFrameMixin:UpdatePaddingAndLayout()
 	self.leftPadding = 10
 	self.rightPadding = 10
     self.topPadding = 10
@@ -128,7 +127,7 @@ function SoulairePartyFrameMixin:UpdatePaddingAndLayout()
 	self:Layout()
 end
 
-function SoulairePartyFrameMixin:UpdatePartyFrames()
+function SoulPartyFrameMixin:UpdatePartyFrames()
 	local showPartyFrames = self:ShouldShow()
 	for memberFrame in self.PartyMemberFramePool:EnumerateActive() do
 		if showPartyFrames then
@@ -141,34 +140,34 @@ function SoulairePartyFrameMixin:UpdatePartyFrames()
 	self:UpdatePaddingAndLayout()
 end
 
-function SoulairePartyFrame_Unlock()
-	SoulairePartyFrame:SetMovable(true)
-    SoulairePartyFrame:EnableMouse(true)
+function SoulPartyFrame_Unlock()
+	SoulPartyFrame:SetMovable(true)
+    SoulPartyFrame:EnableMouse(true)
 	for i=1, MAX_PARTY_MEMBERS do
-		local PartyMemberFrame = SoulairePartyFrame["MemberFrame" .. i]
+		local PartyMemberFrame = SoulPartyFrame["MemberFrame" .. i]
 		if PartyMemberFrame then
 			PartyMemberFrame:SetMovable(true)
 		end
 	end
 end
 
-function SoulairePartyFrame_Lock()
-	SoulairePartyFrame:SetMovable(false)
-    SoulairePartyFrame:EnableMouse(false)
+function SoulPartyFrame_Lock()
+	SoulPartyFrame:SetMovable(false)
+    SoulPartyFrame:EnableMouse(false)
 	for i=1, MAX_PARTY_MEMBERS do
-		local PartyMemberFrame = SoulairePartyFrame["MemberFrame" .. i]
+		local PartyMemberFrame = SoulPartyFrame["MemberFrame" .. i]
 		if PartyMemberFrame then
 			PartyMemberFrame:SetMovable(false)
 		end
 	end
 end
 
-function SoulairePartyFrame_IsLocked()
-	return not SoulairePartyFrame:IsMovable()
+function SoulPartyFrame_IsLocked()
+	return not SoulPartyFrame:IsMovable()
 end
 
-function SoulairePartyFrame_IsUnlocked()
-	return SoulairePartyFrame:IsMovable()
+function SoulPartyFrame_IsUnlocked()
+	return SoulPartyFrame:IsMovable()
 end
 
 function UpdateHealPrediction(frame)

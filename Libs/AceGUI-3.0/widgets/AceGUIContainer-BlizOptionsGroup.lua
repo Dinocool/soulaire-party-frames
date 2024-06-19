@@ -2,15 +2,15 @@
 BlizOptionsGroup Container
 Simple container widget for the integration of AceGUI into the Blizzard Interface Options
 -------------------------------------------------------------------------------]]
-local Type, Version = "BlizOptionsGroup-Z", 21
-local AceGUI = LibStub and LibStub("AceGUI-3.0-Z", true)
+local Type, Version = "BlizOptionsGroup", 26
+local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
 
 -- Lua APIs
 local pairs = pairs
 
 -- WoW APIs
-local CreateFrame = AceGUI.CreateFrameWithBG
+local CreateFrame = CreateFrame
 
 --[[-----------------------------------------------------------------------------
 Scripts
@@ -92,20 +92,14 @@ local methods = {
 			self.label:SetText(title)
 		end
 		content:SetPoint("BOTTOMRIGHT", -10, 10)
-	end,
-
-	["SetTitleFontObject"] = function(self, font)
-		font = font or GameFontNormalLarge
-		self.label:SetFont(font:GetFont())
-		self.label:SetTextColor(font:GetTextColor())
-	end,
+	end
 }
 
 --[[-----------------------------------------------------------------------------
 Constructor
 -------------------------------------------------------------------------------]]
 local function Constructor()
-	local frame = CreateFrame("Frame")
+	local frame = CreateFrame("Frame", nil, InterfaceOptionsFramePanelContainer)
 	frame:Hide()
 
 	-- support functions for the Blizzard Interface Options
@@ -113,6 +107,11 @@ local function Constructor()
 	frame.cancel = cancel
 	frame.default = default
 	frame.refresh = refresh
+
+	-- 10.0 support function aliases (cancel has been removed)
+	frame.OnCommit = okay
+	frame.OnDefault = default
+	frame.OnRefresh = refresh
 
 	frame:SetScript("OnHide", OnHide)
 	frame:SetScript("OnShow", OnShow)
