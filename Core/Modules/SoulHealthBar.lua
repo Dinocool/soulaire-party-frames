@@ -70,7 +70,6 @@ function SoulHealthBarMixin:InitializeHealPrediction()
 		self.OverHealAbsorbGlow:SetPoint("TOPRIGHT", self, "TOPLEFT", 7, 0);
 	end
 
-	DevTool:AddData(self.TotalAbsorbBar)
 	self.TotalAbsorbBar:SetFillColor(CreateColor(1,1,1,0.25))
 	AddOffsetAnimation(self.TotalAbsorbBar.TiledFillOverlay)
     self:RegisterHealPredictionEvents()
