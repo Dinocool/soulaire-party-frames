@@ -82,7 +82,7 @@ function SPF_Config:OnEnable()
                             return SPF_DB.class_color_health_bars
                         end
                     },
-                    party_scale = {
+                    flash_threshold = {
                         type = 'range',
                         min = 0.0,
                         max = 1.0,
