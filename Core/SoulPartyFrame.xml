@@ -4,6 +4,13 @@
 			<KeyValue key="bottomPadding" value="2" type="number"/>
 			<KeyValue key="spacing" value="-10" type="number"/>
 		</KeyValues>
+		<Layers>
+			<Layer level="BACKGROUND" textureSubLevel="2">
+				<Texture parentKey="Background" setAllPoints="true" hidden="true">
+					<Color r="0" b="0.2" g="0" a="0.5"/>
+				</Texture>
+			</Layer>
+		</Layers>
 		<Anchors>
 			<Anchor point="TOPLEFT"/>
 		</Anchors>

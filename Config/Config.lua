@@ -20,9 +20,9 @@ function SPF_Config:OnEnable()
                         order = 2,
                         name = 'Unlock Party Frame',
                         desc = 'Unlock the Party Frame to move it',
-                        hidden = SoulairePartyFrame_IsUnlocked,
+                        hidden = SoulPartyFrame_IsUnlocked,
                         func = function()
-                            SoulairePartyFrame_Unlock()
+                            SoulPartyFrame_Unlock()
                         end
                     },
                     party_lock = {
@@ -30,9 +30,9 @@ function SPF_Config:OnEnable()
                         order = 2,
                         name = 'Lock Party Frame',
                         desc = 'Lock the Party Frame',
-                        hidden = SoulairePartyFrame_IsLocked,
+                        hidden = SoulPartyFrame_IsLocked,
                         func = function()
-                            SoulairePartyFrame_Lock()
+                            SoulPartyFrame_Lock()
                         end
                     },
                     party_scale = {
@@ -46,7 +46,7 @@ function SPF_Config:OnEnable()
                         set = function(_, val)
                             SPF_DB.party_scale = val
 
-                            SoulairePartyFrame_UpdateSettingFrameSize()
+                            SoulPartyFrame_UpdateSettingFrameSize()
                         end,
                         get = function()
                             return SPF_DB.party_scale

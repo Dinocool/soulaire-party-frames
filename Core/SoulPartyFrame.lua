@@ -29,6 +29,10 @@ function SoulPartyFrameMixin:OnLoad()
     --end
 
     SoulPartyFrame_Lock()
+
+	--self.DamagePrediction = CreateFrame("Frame","DamagePrediction")
+	--self.DamagePrediction = Mixin(self.DamagePrediction,IncomingDamagePredictMixin)
+	--self.DamagePrediction:Initialize()
 end
 
 function SoulPartyFrame_UpdateSettingFrameSize()
@@ -148,10 +152,11 @@ end
 function SoulPartyFrame_Unlock()
 	SoulPartyFrame:SetMovable(true)
     SoulPartyFrame:EnableMouse(true)
+	SoulPartyFrame.Background:Show();
 	for i=1, MAX_PARTY_MEMBERS do
 		local PartyMemberFrame = SoulPartyFrame["MemberFrame" .. i]
 		if PartyMemberFrame then
-			PartyMemberFrame:SetMovable(true)
+			PartyMemberFrame:EnableMouse(false)
 		end
 	end
 end
@@ -159,10 +164,11 @@ end
 function SoulPartyFrame_Lock()
 	SoulPartyFrame:SetMovable(false)
     SoulPartyFrame:EnableMouse(false)
+	SoulPartyFrame.Background:Hide();
 	for i=1, MAX_PARTY_MEMBERS do
 		local PartyMemberFrame = SoulPartyFrame["MemberFrame" .. i]
 		if PartyMemberFrame then
-			PartyMemberFrame:SetMovable(false)
+			PartyMemberFrame:EnableMouse(true)
 		end
 	end
 end
