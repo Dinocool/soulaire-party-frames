@@ -1,4 +1,4 @@
 function SPF:OnEnable()
     SPF:HideBlizzardFrames()
-    SPF:InitializeMasque()
+    --SPF:InitializeMasque()
 end
