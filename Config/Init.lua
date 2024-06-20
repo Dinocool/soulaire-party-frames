@@ -14,6 +14,7 @@ function SPF:OnInitialize()
             class_color_health_bars=true,
             max_party_buffs=10,
             max_party_debuffs=10,
+            flash_threshold=0.1
         },
     }
 

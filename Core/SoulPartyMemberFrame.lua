@@ -40,8 +40,6 @@ function SoulPartyMemberFrameMixin:ToPlayerArt()
     self:HealthBarArt()
     self:StatusArt()
 
-	self:UpdateNameTextAnchors()
-
 	--securecall("UnitFrame_SetUnit", self, self.unit, self.HealthBar, self.ManaBar)
 	--securecall("UnitFrame_Update", self, true)
 end
@@ -50,7 +48,7 @@ function SoulPartyMemberFrameMixin:NoPowerBarPlayerArt()
     self.Texture:SetAtlas("plunderstorm-UI-HUD-UnitFrame-Player-PortraitOn-2x")
 
     self.Flash:SetAtlas("plunderstorm-UI-HUD-UnitFrame-Player-PortraitOn-InCombat-2x", TextureKitConstants.UseAtlasSize)
-    self.Flash:SetPoint("CENTER", self, "CENTER", -1.5, 1)
+
     self.HealthBar:SetWidth(124)
     --self.HealthBar:SetPoint("TOPLEFT", 85, -41)
 
@@ -69,7 +67,6 @@ function SoulPartyMemberFrameMixin:PowerBarPlayerArt()
     self.Texture:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn")
 
     self.Flash:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-InCombat", TextureKitConstants.UseAtlasSize)
-    self.Flash:SetPoint("CENTER", self, "CENTER", -1.5, 1)
 
     self.HealthBar:SetWidth(124)
     self.HealthBar:SetPoint("TOPLEFT", 85, -41)
@@ -79,6 +76,9 @@ function SoulPartyMemberFrameMixin:PowerBarPlayerArt()
     self.HealthBar:SetHeight(19)
     self.HealthBar.HealthBarMask:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-Bar-Health-Mask")
     self.HealthBar.HealthBarMask:SetHeight(31)
+
+	self.ManaBar:SetHeight(10)
+    self.ManaBar:SetWidth(129)
 end
 
 function SoulPartyMemberFrameMixin:HealthBarArt()
@@ -90,9 +90,10 @@ function SoulPartyMemberFrameMixin:HealthBarArt()
     if (classHealth) then
         local _,class = UnitClass(self:GetUnit())
         local r,g,b = GetClassColor(class)
-        self.HealthBar.HealthBarTexture:SetVertexColor(r,g,b)
+        self.HealthBar:SetColor(r,g,b)
         self.HealthBar.HealthBarTexture:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-Bar-Health-Status")
     else
+		self.HealthBar:SetColor(1,1,1)
         self.HealthBar.HealthBarTexture:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-Bar-Health")
     end
 
@@ -104,8 +105,6 @@ end
 function SoulPartyMemberFrameMixin:StatusArt()
 
     self.StatusFlash:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-Status", TextureKitConstants.UseAtlasSize)
-    self.StatusFlash:SetPoint("TOPLEFT", self, "TOPLEFT", 16, -14)
-    self.StatusFlash:SetWidth(197)
     self:AddPulseAnimation(self.StatusFlash)
     self:AddPulseAnimation(self.Flash)
 end
@@ -194,14 +193,6 @@ function SoulPartyMemberFrameMixin:UpdateManaBarTextAnchors()
 		self.ManaBar.LeftText:SetPoint("LEFT", self.ManaBar, "LEFT", 4, manaBarTextOffsetY)
 	else
 		self.ManaBar.LeftText:SetPoint("LEFT", self.ManaBar, "LEFT", 3, manaBarTextOffsetY)
-	end
-end
-
-function SoulPartyMemberFrameMixin:UpdateNameTextAnchors()
-	if(self.state == "player") then
-		self.Name:SetPoint("TOPLEFT", 88, -27)
-	else
-		self.Name:SetPoint("TOPLEFT", 96, -27)
 	end
 end
 
@@ -579,7 +570,6 @@ function SoulPartyMemberFrameMixin:UpdateName()
 		if ( UnitInPartyIsAI(self.unit) and C_LFGInfo.IsInLFGFollowerDungeon() ) then
 			nameText = LFG_FOLLOWER_NAME_PREFIX:format(nameText);
 		end
-
 		self.Name:SetText(nameText);
 	end
 end
@@ -617,8 +607,8 @@ function SoulPartyMemberFrameMixin:UpdateOnlineStatus()
 end
 
 function SoulPartyMemberFrameMixin:PartyMemberHealthCheck(value)
-	local unitHPMin, unitHPMax, unitCurrHP
-	unitHPMin, unitHPMax = self.HealthBar:GetMinMaxValues()
+	local unitHPMax, unitCurrHP
+	_, unitHPMax = self.HealthBar:GetMinMaxValues()
 
 	unitCurrHP = self.HealthBar:GetValue()
 	if unitHPMax > 0 then
@@ -824,7 +814,7 @@ local function SetAura(aura, auraType, partyMember, auraIndex)
                 aura.dispelName=""
             end
             borderColor = DebuffTypeColor[aura.dispelName]
-            if (auraIndex == 1 and aura.dispelName ~= "") then
+            if auraIndex == 1 and next(SoulPartyFrame.dispels[string.lower(aura.dispelName)]) ~= nil then
                 local partyFrame = _G["SoulPartyFrame"]["MemberFrame"..partyMember]
                 partyFrame.Flash:Show()
                 partyFrame.Flash:SetVertexColor(borderColor.r, borderColor.g, borderColor.b)

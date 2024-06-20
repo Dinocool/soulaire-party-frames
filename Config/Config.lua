@@ -52,6 +52,51 @@ function SPF_Config:OnEnable()
                             return SPF_DB.party_scale
                         end
                     },
+                    party_show_powerbars = {
+                        type = 'toggle',
+                        order = 4,
+                        name = 'Show Power Bars On Non-Healers',
+                        width = 'double',
+                        desc = 'Enables power bars for non-healers',
+                        set = function(_, val)
+                            SPF_DB.show_power_bars = val
+
+                            SoulPartyFrame:UpdateMemberFrames()
+                        end,
+                        get = function()
+                            return SPF_DB.show_power_bars
+                        end
+                    },
+                    class_color_health_bars = {
+                        type = 'toggle',
+                        order = 5,
+                        name = 'Class Colored Health Bars',
+                        width = 'double',
+                        desc = 'Colors healthbars in their class respective colors',
+                        set = function(_, val)
+                            SPF_DB.class_color_health_bars = val
+
+                            SoulPartyFrame:UpdateMemberFrames()
+                        end,
+                        get = function()
+                            return SPF_DB.class_color_health_bars
+                        end
+                    },
+                    party_scale = {
+                        type = 'range',
+                        min = 0.0,
+                        max = 1.0,
+                        step = 0.05,
+                        order = 36,
+                        name = 'Damage Flash Threshold',
+                        desc = 'The Threshold at which a party frame will flash to indicate heavy damage taken',
+                        set = function(_, val)
+                            SPF_DB.flash_threshold = val
+                        end,
+                        get = function()
+                            return SPF_DB.flash_threshold
+                        end
+                    },
                     auraHeader = {
                         type = 'header',
                         name = 'Auras Options',

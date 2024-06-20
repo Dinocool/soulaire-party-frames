@@ -1,5 +1,20 @@
 SoulHealthBarMixin=CreateFromMixins(SoulTextStatusBarMixin) -- A Health Bar Is a type of text status bar
 
+local function AddFlashAnimation(frame)
+    if not frame.FlashAnimation then
+        frame.FlashAnimation = frame:CreateAnimationGroup()
+        local animGroup = frame.FlashAnimation
+        animGroup.Flash = animGroup:CreateAnimation("VertexColor")
+        animGroup.Flash:SetDuration(1.0)
+        animGroup.Flash:SetStartColor(CreateColor(1,0,0))
+        animGroup.Flash:SetEndColor(CreateColor(0,0,0))
+        animGroup.Flash:SetSmoothing("OUT")
+		--Easy Testing
+		--animGroup:SetLooping("REPEAT")
+		--animGroup:Play()
+    end
+end
+
 --Intializes the healthbar
 function SoulHealthBarMixin:Initialize(unit, frequentUpdates)
     self.frequentUpdates=frequentUpdates
@@ -10,8 +25,36 @@ function SoulHealthBarMixin:Initialize(unit, frequentUpdates)
     --Cap numeric display in our text status bar
     self.capNumericDisplay=true
     self:TextStatusBarInitialize()
-    --self:SetScript("OnValueChanged", self.OnValueChanged)
+	if SPF_DB.flash_threshold < 1.0 then
+		self.thresholdValue = SPF_DB.flash_threshold
+		AddFlashAnimation(self.HealthBarTexture)
+	end
 end
+
+--Updates the bars color
+function SoulHealthBarMixin:SetColor(r,g,b,a)
+	self.HealthBarTexture:SetVertexColor(r,g,b,a)
+	if self.HealthBarTexture.FlashAnimation then
+		self.HealthBarTexture.FlashAnimation.Flash:SetEndColor(CreateColor(r,g,b,a))
+	end
+end
+
+
+
+local function AddOffsetAnimation(frame)
+    if not frame.PulseAnimation then
+        frame.PulseAnimation = frame:CreateAnimationGroup()
+        local animGroup = frame.PulseAnimation
+        animGroup.Pulse = animGroup:CreateAnimation("TextureCoord")
+        animGroup.Pulse:SetOffset(1.0,0.0)
+		animGroup.Pulse:SetDuration(5.0)
+        
+        animGroup:SetLooping("REPEAT")
+        animGroup:Play()
+    end
+end
+
+
 
 function SoulHealthBarMixin:InitializeHealPrediction()
     if (self.OverAbsorbGlow) then
@@ -27,6 +70,9 @@ function SoulHealthBarMixin:InitializeHealPrediction()
 		self.OverHealAbsorbGlow:SetPoint("TOPRIGHT", self, "TOPLEFT", 7, 0);
 	end
 
+	DevTool:AddData(self.TotalAbsorbBar)
+	self.TotalAbsorbBar:SetFillColor(CreateColor(1,1,1,0.25))
+	AddOffsetAnimation(self.TotalAbsorbBar.TiledFillOverlay)
     self:RegisterHealPredictionEvents()
 end
 
@@ -48,10 +94,19 @@ end
 --This is called extremely frequently, so don't put anything expensive here
 function SoulHealthBarMixin:OnFrequentUpdate()
     if ( not self.disconnected ) then
-        local currValue = UnitHealth(self.unit)
-        self:SetValue(currValue)
-        self:UpdateTextString()
+        self:AdjustHealth(UnitHealth(self.unit))
     end
+end
+
+function SoulHealthBarMixin:AdjustHealth(value)
+	local currValue = self:GetValue()
+	local _,maxValue = self:GetMinMaxValues()
+	local percentage = (currValue-value)/maxValue
+	if self.thresholdValue and percentage > self.thresholdValue then
+		self.HealthBarTexture.FlashAnimation:Play()
+	end
+	self:SetValue(value)
+	self:UpdateTextString()
 end
 
 --Update triggered from an event rather then per-frame
@@ -67,8 +122,7 @@ function SoulHealthBarMixin:EventUpdate()
         --TODO: Custom styling for a disconnected player
         self:SetValue(maxValue)
     else
-        local currValue = UnitHealth(self.unit)
-        self:SetValue(currValue)
+		self:AdjustHealth(UnitHealth(self.unit))
     end
     self:UpdateTextString()
 
@@ -78,6 +132,9 @@ end
 
 function SoulHealthBarMixin:OnEvent(event, ...)
     if ( event == "CVAR_UPDATE" ) then
+		if self.FlashAnimation then
+			self.FlashAnimation:Play()
+		end
 		self:TextStatusBarOnEvent(event, ...)
     elseif ( event == "VARIABLES_LOADED" ) then
         self:UnregisterEvent("VARIABLES_LOADED")

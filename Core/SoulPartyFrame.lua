@@ -7,11 +7,12 @@ function SoulPartyFrameMixin:OnLoad()
 	end
 
     self.PartyMemberFramePool = CreateFramePool("BUTTON", self, "SoulPartyMemberFrameTemplate", PartyMemberFrameReset)
-
 	self:RegisterEvent("GROUP_ROSTER_UPDATE")
+	self:RegisterEvent("PLAYER_TALENT_UPDATE")
     self:RegisterForDrag("LeftButton")
     self:EnableMouse(true)
     self:SetScript("OnDragStart", self.StartMoving)
+	self:SetScript("OnEvent", self.OnEvent)
 	self:SetScript("OnDragStop", function(self)
 		self:StopMovingOrSizing()
 		if SPF_DB then
@@ -56,15 +57,23 @@ end
 function SoulPartyFrameMixin:OnShow()
 	self:InitializePartyMemberFrames()
 	self:UpdatePartyFrames()
+	
+	--Populate what dispells our player knows
+	self.dispels=SOUL_GetClassDispels("player")
+	
 	--Insert Into omnicd
 	if OmniCD and not self.injectedIntoOmni then
 		table.insert(OmniCD[1].unitFrameData,{ [1] = "SoulPartyFrames",[2] = "SoulPartyFrame",[3] = "unit",})
 		self.injectedIntoOmni=true
 	end
 end
-
 function SoulPartyFrameMixin:OnEvent(event, ...)
-	self:Layout()
+	if event == "PLAYER_TALENT_UPDATE" then
+		self.dispels = SOUL_GetClassDispels("player")
+	else
+		self:UpdatePartyFrames()
+		self:Layout()
+	end
 end
 
 function SoulPartyFrameMixin:ShouldShow()
@@ -73,10 +82,6 @@ end
 
 function SoulPartyFrameMixin:InitializePartyMemberFrames()
 	local memberFramesToSetup = {}
-
-	self:SetScript("OnEvent", function(self, event, ...)
-		self:UpdatePartyFrames()
-	end)
 
 	self.PartyMemberFramePool:ReleaseAll()
 	for i = 1, MAX_PARTY_MEMBERS do
@@ -168,4 +173,101 @@ end
 
 function SoulPartyFrame_IsUnlocked()
 	return SoulPartyFrame:IsMovable()
+end
+
+
+function SOUL_GetClassDispels(unit)
+    local _, class = UnitClass(unit)
+    local spec = GetSpecialization()
+    local dispels = {
+        ["curse"] = {},
+        ["disease"] = {},
+        ["poison"] = {},
+        ["magic"] = {},
+    }
+    if not (spec and class) then return dispels end
+    
+    if (class == "PALADIN") then
+        if IsSpellKnownOrOverridesKnown(213644) then -- Cleanse Toxins
+            dispels["poison"][213644]=true -- Cleanse Toxins
+            dispels["disease"][213644]=true -- Cleanse Toxins
+        end
+        if IsSpellKnownOrOverridesKnown(4987) then 
+            dispels["magic"][4987]=true -- Cleanse
+            if IsPlayerSpell(393024) then -- Improved Cleanse
+                dispels["poison"][4987]=true -- Cleanse
+                dispels["disease"][4987]=true -- Cleanse
+            end
+        end
+    elseif (class == "PRIEST") then
+        if IsSpellKnownOrOverridesKnown(213634) then
+            dispels["disease"][213634] = true -- Purify Disease
+        end
+        
+        if IsSpellKnownOrOverridesKnown(527) then
+            dispels["magic"][527] = true -- Purify
+            if IsPlayerSpell(390632) then -- Improved Purify
+                dispels["disease"][527] = true -- Purify
+            end
+        end
+        
+        if IsSpellKnownOrOverridesKnown(32375) then
+            dispels["magic"][32375] = true -- Mass Dispel
+        end
+    elseif (class == "SHAMAN") then
+        if IsSpellKnownOrOverridesKnown(51886) then
+            dispels["curse"][51886] = true -- Cleanse Spirit
+        end
+        
+        if IsSpellKnownOrOverridesKnown(77130) then
+            dispels["magic"][77130] = true -- Purify Spirit
+            if IsPlayerSpell(383016) then -- Improved Purify Spirit
+                dispels["curse"][77130] = true -- Purify Spirit
+            end
+        end
+    elseif (class == "MAGE") then
+        if IsSpellKnownOrOverridesKnown(475) then
+            dispels["curse"][475] = true -- Remove Curse
+        end
+    elseif (class == "MONK") then
+        if IsSpellKnownOrOverridesKnown(218164) then 
+            dispels["poison"][218164] = true -- Detox
+            dispels["disease"][218164] = true -- Detox
+        end
+        
+        if IsSpellKnownOrOverridesKnown(115450) then
+            dispels["magic"][115450] = true -- Detox
+            if IsPlayerSpell(388874) then -- Improved Detox
+                dispels["poison"][115450] = true -- Detox
+                dispels["disease"][115450] = true -- Detox
+            end
+        end
+    elseif (class == "DRUID") then
+        if IsSpellKnownOrOverridesKnown(2782) then        
+            dispels["curse"][2782] = true -- Remove Corruption
+            dispels["poison"][2782] = true -- Remove Corruption
+        end
+        
+        if IsSpellKnownOrOverridesKnown(88423) then
+            dispels["magic"][88423] = true -- Nature's Cure
+            if IsPlayerSpell(392378) then -- Improved Nature's Cure
+                dispels["curse"][88423] = true -- Nature's Cure
+                dispels["poison"][88423] = true -- Nature's Cure
+            end
+        end
+    elseif (class == "EVOKER") then
+        if IsSpellKnownOrOverridesKnown(365585) then        
+            dispels["poison"][365585] = true -- Expunge
+            if IsPlayerSpell(360823) then -- Naturalize
+                dispels["magic"][365585] = true -- Expunge
+            end
+        end
+        
+        if IsSpellKnownOrOverridesKnown(374251) then        
+            dispels["curse"][374251] = true -- Cauterizing Flame
+            dispels["poison"][374251] = true -- Cauterizing Flame
+            dispels["disease"][374251] = true -- Cauterizing Flame
+        end
+    end
+    return dispels
 end

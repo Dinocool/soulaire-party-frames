@@ -18,9 +18,9 @@
 					</Anchors>
 				</Texture>
 				<FontString parentKey="Name" inherits="GameFontNormalSmall" justifyH="LEFT">
-					<Size x="100" y="12"/>
+					<Size x="120" y="12"/>
 					<Anchors>
-						<Anchor point="TOPLEFT" x="88" y="-29"/>
+						<Anchor point="TOPLEFT" x="86" y="-26"/>
 					</Anchors>
 				</FontString>
 				<FontString parentKey="ResurrectableIndicator" inherits="ResurrectableIndicatorTemplate" hidden="true">
@@ -34,14 +34,14 @@
 					 This is different from Flash, which is a flash of the entire frame area.-->
 				<Texture parentKey="StatusFlash" atlas="UI-HUD-UnitFrame-Player-PortraitOn-Status" useAtlasSize="true" hidden="true">
 					<Anchors>
-						<Anchor point="TOPLEFT" x="15" y="-14"/>
+						<Anchor point="TOPLEFT" x="17" y="-13"/>
 					</Anchors>
 				</Texture>
 			</Layer>
 			<Layer level="OVERLAY"  textureSubLevel = "1">
-				<Texture parentKey="Flash" atlas="UI-HUD-UnitFrame-Player-PortraitOn-InCombat" useAtlasSize="true" hidden="true" texelSnappingBias="0.0" snapToPixelGrid="false">
+				<Texture parentKey="Flash" atlas="UI-HUD-UnitFrame-Player-PortraitOn-InCombat" hidden="true" texelSnappingBias="0.0" snapToPixelGrid="false">
 					<Anchors>
-						<Anchor point="CENTER" x="-1.5" y="1"/>
+						<Anchor point="CENTER" x="-2" y="1"/>
 					</Anchors>
 				</Texture>
 			</Layer>
