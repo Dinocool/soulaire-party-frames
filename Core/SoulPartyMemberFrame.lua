@@ -814,7 +814,7 @@ local function SetAura(aura, auraType, partyMember, auraIndex)
                 aura.dispelName=""
             end
             borderColor = DebuffTypeColor[aura.dispelName]
-            if auraIndex == 1 and next(SoulPartyFrame.dispels[string.lower(aura.dispelName)]) ~= nil then
+            if auraIndex == 1 and SoulPartyFrame.dispels and SoulPartyFrame.dispels[string.lower(aura.dispelName)] and next(SoulPartyFrame.dispels[string.lower(aura.dispelName)]) ~= nil then
                 local partyFrame = _G["SoulPartyFrame"]["MemberFrame"..partyMember]
                 partyFrame.Flash:Show()
                 partyFrame.Flash:SetVertexColor(borderColor.r, borderColor.g, borderColor.b)
