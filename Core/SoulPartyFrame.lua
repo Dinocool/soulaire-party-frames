@@ -24,10 +24,6 @@ function SoulPartyFrameMixin:OnLoad()
 		end
 	end)
 
-    --if not SPF:IsHooked("UnitFrameHealPredictionBars_Update") then
-    --    SPF:SecureHook("UnitFrameHealPredictionBars_Update",UpdateHealPrediction)
-    --end
-
     SoulPartyFrame_Lock()
 
 	--self.DamagePrediction = CreateFrame("Frame","DamagePrediction")
@@ -61,13 +57,14 @@ end
 function SoulPartyFrameMixin:OnShow()
 	self:InitializePartyMemberFrames()
 	self:UpdatePartyFrames()
+
 	
 	--Populate what dispells our player knows
 	self.dispels=SOUL_GetClassDispels("player")
 	
 	--Insert Into omnicd
 	if OmniCD and not self.injectedIntoOmni then
-		table.insert(OmniCD[1].unitFrameData,{ [1] = "SoulPartyFrames",[2] = "SoulPartyFrame",[3] = "unit",})
+		table.insert(OmniCD[1].unitFrameData,{ [1] = "SoulairePartyFrames",[2] = "SoulPartyFrame",[3] = "unit",})
 		self.injectedIntoOmni=true
 	end
 end
