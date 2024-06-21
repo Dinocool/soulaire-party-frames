@@ -25,10 +25,6 @@ function SoulPartyFrameMixin:OnLoad()
 	end)
 
     SoulPartyFrame_Lock()
-
-	--self.DamagePrediction = CreateFrame("Frame","DamagePrediction")
-	--self.DamagePrediction = Mixin(self.DamagePrediction,IncomingDamagePredictMixin)
-	--self.DamagePrediction:Initialize()
 end
 
 function SoulPartyFrame_UpdateSettingFrameSize()
@@ -66,6 +62,13 @@ function SoulPartyFrameMixin:OnShow()
 	if OmniCD and not self.injectedIntoOmni then
 		table.insert(OmniCD[1].unitFrameData,{ [1] = "SoulairePartyFrames",[2] = "SoulPartyFrame",[3] = "unit",})
 		self.injectedIntoOmni=true
+	end
+
+	--Setup damage prediction
+	if SPF_DB.show_damage_prediction then
+		self.DamagePrediction = CreateFrame("Frame","DamagePrediction")
+		self.DamagePrediction = Mixin(self.DamagePrediction,IncomingDamagePredictMixin)
+		self.DamagePrediction:Initialize()
 	end
 end
 function SoulPartyFrameMixin:OnEvent(event, ...)

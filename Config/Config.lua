@@ -87,7 +87,7 @@ function SPF_Config:OnEnable()
                         min = 0.0,
                         max = 1.0,
                         step = 0.05,
-                        order = 36,
+                        order = 6,
                         name = 'Damage Flash Threshold',
                         desc = 'The Threshold at which a party frame will flash to indicate heavy damage taken',
                         set = function(_, val)
@@ -95,6 +95,19 @@ function SPF_Config:OnEnable()
                         end,
                         get = function()
                             return SPF_DB.flash_threshold
+                        end
+                    },
+                    party_damage_prediction = {
+                        type = 'toggle',
+                        order = 7,
+                        name = 'Calculate and show Damage Prediction (WIP)',
+                        width = 'double',
+                        desc = 'Attempts to predict large damage events and displays them, requires a reload',
+                        set = function(_, val)
+                            SPF_DB.show_damage_prediction = val
+                        end,
+                        get = function()
+                            return SPF_DB.show_damage_prediction
                         end
                     },
                     auraHeader = {
@@ -150,4 +163,8 @@ function SPF_Config:OnEnable()
     SPF:RegisterChatCommand('SPF', function(_)
         InterfaceOptionsFrame_OpenToCategory(SPF_ConfigPanel)
     end)   
+
+    SPF:RegisterChatCommand('SD', function(_)
+        SpellDebug:Show()
+    end)  
 end

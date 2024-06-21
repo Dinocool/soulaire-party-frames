@@ -100,6 +100,9 @@ function SoulPartyMemberFrameMixin:HealthBarArt()
     --Update prediction textures
     self.HealthBar.MyHealPredictionBar.Fill:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-Bar-Health-Status")
     self.HealthBar.OtherHealPredictionBar.Fill:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-Bar-Health-Status")
+	self.HealthBar.HealAbsorbBar.Fill:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-Bar-Health-Status")
+    self.HealthBar.DamagePredictionBar.Fill:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-Bar-Health-Status")
+	self.HealthBar.DamagePredictionBar:SetPoint("BOTTOMRIGHT",self.HealthBar,"BOTTOMRIGHT",-1,1)
 end
 
 function SoulPartyMemberFrameMixin:StatusArt()

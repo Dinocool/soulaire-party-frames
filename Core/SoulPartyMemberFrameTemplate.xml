@@ -84,6 +84,7 @@
 					<Frame parentKey="MyHealPredictionBar" inherits="PartyFrameBarSegmentTemplate, MyHealPredictionBarTemplate"/>
 					<Frame parentKey="OtherHealPredictionBar" inherits="PartyFrameBarSegmentTemplate, OtherHealPredictionBarTemplate"/>
 					<Frame parentKey="HealAbsorbBar" inherits="PartyFrameBarSegmentTemplate, HealAbsorbBarTemplate"/>
+					<Frame parentKey="DamagePredictionBar" inherits="PartyFrameBarSegmentTemplate, HealAbsorbBarTemplate"/>
 					<Frame parentKey="TotalAbsorbBar" inherits="PartyFrameBarSegmentTemplate, TotalAbsorbBarTemplate"/>
 				</Frames>
 				<Layers>

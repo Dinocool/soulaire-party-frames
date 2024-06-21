@@ -21,7 +21,8 @@ function SoulHealthBarMixin:Initialize(unit, frequentUpdates)
     self:SetUnit(unit)
     self:SetScript("OnEvent", self.OnEvent)
     self:InitializeHealPrediction()
-
+	
+	self.predictedSpells={}
     --Cap numeric display in our text status bar
     self.capNumericDisplay=true
     self:TextStatusBarInitialize()
@@ -39,6 +40,34 @@ function SoulHealthBarMixin:SetColor(r,g,b,a)
 	end
 end
 
+function SoulHealthBarMixin:SetDamagePrediction(castGUID, value)
+	--print("new damage event damage: " .. value .. " on unit: " .. self.unit)
+	if self.predictedSpells[castGUID] == nil then
+		self.predictedSpells[castGUID]=value
+		self.totalPredictedDamage= self.totalPredictedDamage + value
+		self:UpdateDamagePrediction()
+	end
+end
+
+function SoulHealthBarMixin:ResolveDamagePrediction(castGUID)
+	local value = self.predictedSpells[castGUID]
+	if value then
+		--print("resolved damage event from cast " .. castGUID)
+		self.totalPredictedDamage= self.totalPredictedDamage - value
+		self.predictedSpells[castGUID] = nil
+		self:UpdateDamagePrediction()
+	end
+end
+
+function SoulHealthBarMixin:UpdateDamagePrediction()
+	local _, max = self:GetMinMaxValues()
+	self.DamagePredictionBar:UpdateFillPosition(self:GetStatusBarTexture(),self.totalPredictedDamage,-(self.totalPredictedDamage/max))
+	if self.totalPredictedDamage <= 0 then
+		self.DamagePredictionBar:Hide()
+	else
+		self.DamagePredictionBar:Show()
+	end
+end
 
 
 local function AddOffsetAnimation(frame)
@@ -71,7 +100,11 @@ function SoulHealthBarMixin:InitializeHealPrediction()
 	end
 
 	self.TotalAbsorbBar:SetFillColor(CreateColor(1,1,1,0.25))
+	self.DamagePredictionBar:SetFillColor(CreateColor(1,0,0,0.8))
 	AddOffsetAnimation(self.TotalAbsorbBar.TiledFillOverlay)
+	
+	self.totalPredictedDamage=0
+	self:UpdateDamagePrediction()
     self:RegisterHealPredictionEvents()
 end
 

@@ -191,6 +191,12 @@
         "UnitFrameHealthBar_OnUpdate",
         "UnitFrameHealthBar_RefreshUpdateEvent",
         "AbbreviateLargeNumbers",
-        "LFG_FOLLOWER_NAME_PREFIX"
+        "LFG_FOLLOWER_NAME_PREFIX",
+        "MODELFRAME_DEFAULT_ROTATION",
+        "Add",
+        "DAMAGE",
+        "BOOKTYPE_SPELL",
+        "toString",
+        "ZONE"
     ]
 }
