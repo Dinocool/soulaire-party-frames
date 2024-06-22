@@ -55,8 +55,6 @@ function SoulPartyFrame_UpdateSettingFramePoint()
 		x = math.floor(SPF_DB.party_position_x)
 		y = math.floor(SPF_DB.party_position_y)
 	end
-	x=100
-	y=100
 	SoulPartyFrame:ClearAllPoints()
 	SoulPartyFrame:SetPoint(point, UIParent, relativePoint, x, y)
 end

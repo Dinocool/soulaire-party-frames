@@ -7,11 +7,7 @@ function SoulPartyMemberFrameMixin:GetUnit()
 end
 
 function SoulPartyMemberFrameMixin:UpdateArt()
-	if UnitHasVehicleUI(self.unit) and UnitIsConnected(self:GetUnit()) then
-		self:ToVehicleArt()
-	else
-		self:ToPlayerArt()
-	end
+	self:ToPlayerArt()
 end
 
 function SoulPartyMemberFrameMixin:ToPlayerArt()
@@ -28,7 +24,6 @@ function SoulPartyMemberFrameMixin:ToPlayerArt()
         showPowerBar = SPF_DB.show_power_bars or role=="HEALER"
     end
 
-	self.VehicleTexture:Hide()
 	self.Texture:Show()
 
     if (showPowerBar) then
@@ -127,46 +122,6 @@ function SoulPartyMemberFrameMixin:AddPulseAnimation(frame)
     end
 end
 
-
-function SoulPartyMemberFrameMixin:ToVehicleArt()
-    if self:IsForbidden() then return end
-    if InCombatLockdown() then return end
-
-	self.state = "vehicle"
-	self.overrideUnit = self.unit
-
-	self.Texture:Hide()
-	self.VehicleTexture:Show()
-
-	self.Flash:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-Vehicle-InCombat", TextureKitConstants.UseAtlasSize)
-	self.Flash:SetPoint("CENTER", self.Flash:GetParent(), "CENTER", -3.5, 1)
-
-	self.PartyMemberOverlay.Status:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-Vehicle-Status", TextureKitConstants.UseAtlasSize)
-	self.PartyMemberOverlay.Status:SetPoint("TOPLEFT", self, "TOPLEFT", -3, 3)
-
-	self.HealthBar.HealthBarTexture:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-Vehicle-Bar-Health", TextureKitConstants.UseAtlasSize)
-	self.HealthBar:SetWidth(118)
-	self.HealthBar:SetHeight(20)
-	self.HealthBar:SetPoint("TOPLEFT", 91, -40)
-	self:UpdateHealthBarTextAnchors()
-
-	-- Party frames when in a vehicle do not have a mask for the health bar, so remove any applied target mask that would not fit.
-	self.HealthBar.HealthBarMask:SetPoint("TOPLEFT", self.HealthBar.HealthBarMask:GetParent(), "TOPLEFT", -8, 6)
-
-	self.ManaBar:SetWidth(118)
-	self.ManaBar:SetHeight(10)
-	self.ManaBar:SetPoint("TOPLEFT",91,-61)
-	self:UpdateManaBarTextAnchors()
-
-	self.ManaBar.ManaBarMask:SetWidth(121)
-	self.ManaBar.ManaBarMask:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-Bar-Mana-Mask")
-
-	self:UpdateNameTextAnchors()
-
-	--securecall("UnitFrame_SetUnit", self, self.petUnitToken, self.HealthBar, self.ManaBar)
-	--securecall("UnitFrame_Update", self, true)
-end
-
 function SoulPartyMemberFrameMixin:UpdateHealthBarTextAnchors()
 	local healthBarTextOffsetX = 0
 	local healthBarTextOffsetY = 0
@@ -261,8 +216,6 @@ function SoulPartyMemberFrameMixin:RegisterEvents()
 	self:RegisterEvent("READY_CHECK")
 	self:RegisterEvent("READY_CHECK_CONFIRM")
 	self:RegisterEvent("READY_CHECK_FINISHED")
-	self:RegisterEvent("UNIT_ENTERED_VEHICLE")
-	self:RegisterEvent("UNIT_EXITED_VEHICLE")
 	self:RegisterEvent("UNIT_CONNECTION")
 	self:RegisterEvent("PARTY_MEMBER_ENABLE")
 	self:RegisterEvent("PARTY_MEMBER_DISABLE")
@@ -303,8 +256,9 @@ function SoulPartyMemberFrameMixin:UpdateMember()
 	end
 
 	if showFrame then
-		--TODO: check if we're in combat.i
-		self:Show()
+		if not self:IsForbidden() and not InCombatLockdown() then
+			self:Show()
+		end
 		if VoiceActivityManager then
 			local guid = UnitGUID(self:GetUnit())
 			VoiceActivityManager:RegisterFrameForVoiceActivityNotifications(self, guid, nil, "VoiceActivityNotificationPartyTemplate", "Button", PartyMemberFrameMixin.VoiceActivityNotificationCreatedCallback)
@@ -314,20 +268,23 @@ function SoulPartyMemberFrameMixin:UpdateMember()
 		self.HealthBar:EventUpdate()
 		self.ManaBar:UpdatePowerType()
 		self:UpdateDistance()
-		self:UpdatePvPStatus()
-		self:UpdateVoiceStatus()
-		self:UpdateReadyCheck()
-		self:UpdateOnlineStatus()
-		self:UpdateNotPresentIcon()
-		self:UpdateArt()
-		self:UpdateAuras()
 	else
 		if VoiceActivityManager then
 			VoiceActivityManager:UnregisterFrameForVoiceActivityNotifications(self)
 			self.voiceNotification = nil
 		end
-		self:Hide()
+		if not self:IsForbidden() and not InCombatLockdown() then
+			self:Hide()
+		end
 	end
+
+	self:UpdateAuras()
+	self:UpdatePvPStatus()
+	self:UpdateVoiceStatus()
+	self:UpdateReadyCheck()
+	self:UpdateOnlineStatus()
+	self:UpdateNotPresentIcon()
+	self:UpdateArt()
 
 end
 
@@ -433,6 +390,7 @@ end
 
 function SoulPartyMemberFrameMixin:UpdateReadyCheck()
 	local readyCheckFrame = self.ReadyCheck
+	
 	local readyCheckStatus = GetReadyCheckStatus(self:GetUnit())
 	if UnitName(self:GetUnit()) and UnitIsConnected(self:GetUnit()) and readyCheckStatus then
 		if ( readyCheckStatus == "ready" ) then
@@ -448,41 +406,39 @@ function SoulPartyMemberFrameMixin:UpdateReadyCheck()
 end
 
 function SoulPartyMemberFrameMixin:UpdateNotPresentIcon()
+	self.NotPresentIcon.Status:Hide()
 	if UnitInOtherParty(self:GetUnit()) then
-		self:SetAlpha(0.6)
 		self.NotPresentIcon.texture:SetAtlas("groupfinder-eye-single", true)
-		self.NotPresentIcon.texture:SetTexCoord(0, 1, 0, 1)
-		self.NotPresentIcon.Border:Show()
+		self.NotPresentIcon.texture:SetTexCoord(0, 1, 0, 0.9)
 		self.NotPresentIcon.tooltip = PARTY_IN_PUBLIC_GROUP_MESSAGE
 		self.NotPresentIcon:Show()
 	elseif C_IncomingSummon.HasIncomingSummon(self:GetUnit()) then
 		local status = C_IncomingSummon.IncomingSummonStatus(self:GetUnit())
 		if status == Enum.SummonStatus.Pending then
-			self.NotPresentIcon.texture:SetAtlas("Raid-Icon-SummonPending")
+			self.NotPresentIcon.texture:SetTexture("3084684")
 			self.NotPresentIcon.texture:SetTexCoord(0, 1, 0, 1)
 			self.NotPresentIcon.tooltip = INCOMING_SUMMON_TOOLTIP_SUMMON_PENDING
-			self.NotPresentIcon.Border:Hide()
 			self.NotPresentIcon:Show()
 		elseif status == Enum.SummonStatus.Accepted then
-			self.NotPresentIcon.texture:SetAtlas("Raid-Icon-SummonAccepted")
+			self.NotPresentIcon.texture:SetTexture("3084684")
 			self.NotPresentIcon.texture:SetTexCoord(0, 1, 0, 1)
 			self.NotPresentIcon.tooltip = INCOMING_SUMMON_TOOLTIP_SUMMON_ACCEPTED
-			self.NotPresentIcon.Border:Hide()
 			self.NotPresentIcon:Show()
+			self.NotPresentIcon.Status.SetAtlas("UI-LFG-ReadyMark-Raid")
+			self.NotPresentIcon.Status:Show()
 		elseif status == Enum.SummonStatus.Declined then
-			self.NotPresentIcon.texture:SetAtlas("Raid-Icon-SummonDeclined")
+			self.NotPresentIcon.texture:SetTexture("3084684")
 			self.NotPresentIcon.texture:SetTexCoord(0, 1, 0, 1)
 			self.NotPresentIcon.tooltip = INCOMING_SUMMON_TOOLTIP_SUMMON_DECLINED
-			self.NotPresentIcon.Border:Hide()
 			self.NotPresentIcon:Show()
+			self.NotPresentIcon.Status.SetAtlas("UI-LFG-DeclineMark-Raid")
+			self.NotPresentIcon.Status:Show()
 		end
 	else
 		local phaseReason = UnitIsConnected(self:GetUnit()) and UnitPhaseReason(self:GetUnit()) or nil
 		if phaseReason then
-			self:SetAlpha(0.6)
-			self.NotPresentIcon.texture:SetTexture("Interface\\TargetingFrame\\UI-PhasingIcon")
-			self.NotPresentIcon.texture:SetTexCoord(0.15625, 0.84375, 0.15625, 0.84375)
-			self.NotPresentIcon.Border:Hide()
+			self.NotPresentIcon.texture:SetTexture(4914669)
+			self.NotPresentIcon.texture:SetVertexColor(0.5,1,1)
 			self.NotPresentIcon.tooltip = PartyUtil.GetPhasedReasonString(phaseReason, self:GetUnit())
 			self.NotPresentIcon:Show()
 		else
@@ -528,20 +484,6 @@ function SoulPartyMemberFrameMixin:OnEvent(event, ...)
 		if UnitExists(self:GetUnit()) then
 			local finishTime = DEFAULT_READY_CHECK_STAY_TIME
 			ReadyCheck_Finish(self.ReadyCheck, finishTime)
-		end
-	elseif event == "UNIT_ENTERED_VEHICLE" then
-		if arg1 == self:GetUnit() then
-			if arg2 and UnitIsConnected(self:GetUnit()) then
-				self:ToVehicleArt()
-			else
-				self:ToPlayerArt()
-			end
-			self:UpdateMember()
-		end
-	elseif event == "UNIT_EXITED_VEHICLE" then
-		if arg1 == self:GetUnit() then
-			self:ToPlayerArt()
-			self:UpdateMember()
 		end
 	elseif event == "UNIT_CONNECTION" and arg1 == self:GetUnit() then
 		self:UpdateArt()
