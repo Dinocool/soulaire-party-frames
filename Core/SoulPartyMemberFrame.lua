@@ -764,7 +764,7 @@ function SoulPartyMemberFrameMixin:SetAura(aura, auraType, auraIndex)
 		auraButton:EnableMouse(true)
         auraButton:SetScript("OnEnter",function(self)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetUnitAura("party"..layoutIndex, auraIndex, auraType == "Buff" and "HELPFUL" or "HARMFUL")
+            GameTooltip:SetUnitBuffByAuraInstanceID("party"..layoutIndex, aura.auraInstanceID, auraType == "Buff" and "HELPFUL" or "HARMFUL")
         end)
 
 		local counttext = ""
