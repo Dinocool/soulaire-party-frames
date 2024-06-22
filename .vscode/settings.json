@@ -197,6 +197,7 @@
         "DAMAGE",
         "BOOKTYPE_SPELL",
         "toString",
-        "ZONE"
+        "ZONE",
+        "CHANNEL"
     ]
 }

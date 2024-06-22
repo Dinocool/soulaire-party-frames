@@ -42,10 +42,14 @@ end
 
 function SoulHealthBarMixin:SetDamagePrediction(castGUID, value)
 	--print("new damage event damage: " .. value .. " on unit: " .. self.unit)
-	if self.predictedSpells[castGUID] == nil then
-		self.predictedSpells[castGUID]=value
-		self.totalPredictedDamage= self.totalPredictedDamage + value
-		self:UpdateDamagePrediction()
+	if castGUID and self.predictedSpells[castGUID] == nil then
+		local _, max = self:GetMinMaxValues()
+		--Only show prediction if it's serious
+		--if (value/max > SPF_DB.flash_threshold) then
+			self.predictedSpells[castGUID]=value
+			self.totalPredictedDamage= self.totalPredictedDamage + value
+			self:UpdateDamagePrediction()
+		--end
 	end
 end
 
@@ -135,6 +139,7 @@ function SoulHealthBarMixin:AdjustHealth(value)
 	local _,maxValue = self:GetMinMaxValues()
 	local percentage = (currValue-value)/maxValue
 	if self.thresholdValue and percentage > self.thresholdValue then
+		self.HealthBarTexture.FlashAnimation:Stop()
 		self.HealthBarTexture.FlashAnimation:Play()
 	end
 	self:SetValue(value)

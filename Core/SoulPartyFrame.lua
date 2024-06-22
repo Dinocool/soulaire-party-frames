@@ -13,18 +13,27 @@ function SoulPartyFrameMixin:OnLoad()
     self:EnableMouse(true)
     self:SetScript("OnDragStart", self.StartMoving)
 	self:SetScript("OnEvent", self.OnEvent)
-	self:SetScript("OnDragStop", function(self)
-		self:StopMovingOrSizing()
-		if SPF_DB then
-			local point, _, relativePoint, x, y = self:GetPoint()
-			SPF_DB.party_point = point
-			SPF_DB.party_relative_point = relativePoint
-			SPF_DB.party_position_x = x
-			SPF_DB.party_position_y = y
-		end
+	self:SetScript("OnDragStop", function()
+		self:StopDrag()
 	end)
 
     SoulPartyFrame_Lock()
+end
+
+function SoulPartyFrameMixin:StopDrag()
+	self:StopMovingOrSizing()
+	if SPF_DB then
+		local point, _, relativePoint, x, y = self:GetPoint()
+		SPF_DB.party_point = point
+		SPF_DB.party_relative_point = relativePoint
+		SPF_DB.party_position_x = x
+		SPF_DB.party_position_y = y
+	end
+end
+
+function SoulPartyFrameMixin:DoLayout()
+	self:GetLayout():Layout()
+	self:Layout()
 end
 
 function SoulPartyFrame_UpdateSettingFrameSize()
@@ -46,6 +55,8 @@ function SoulPartyFrame_UpdateSettingFramePoint()
 		x = math.floor(SPF_DB.party_position_x)
 		y = math.floor(SPF_DB.party_position_y)
 	end
+	x=100
+	y=100
 	SoulPartyFrame:ClearAllPoints()
 	SoulPartyFrame:SetPoint(point, UIParent, relativePoint, x, y)
 end
@@ -53,8 +64,15 @@ end
 function SoulPartyFrameMixin:OnShow()
 	self:InitializePartyMemberFrames()
 	self:UpdatePartyFrames()
-
 	
+	if SPF_DB.party_layout == "VERTICAL" then
+		self.HorizontalLayout:SetParent(nil)
+		self.VerticalLayout:SetParent(self)
+	else
+		self.VerticalLayout:SetParent(nil)
+		self.HorizontalLayout:SetParent(self)
+	end
+
 	--Populate what dispells our player knows
 	self.dispels=SOUL_GetClassDispels("player")
 	
@@ -70,18 +88,46 @@ function SoulPartyFrameMixin:OnShow()
 		self.DamagePrediction = Mixin(self.DamagePrediction,IncomingDamagePredictMixin)
 		self.DamagePrediction:Initialize()
 	end
+	self:DoLayout()
 end
 function SoulPartyFrameMixin:OnEvent(event, ...)
 	if event == "PLAYER_TALENT_UPDATE" then
 		self.dispels = SOUL_GetClassDispels("player")
 	else
 		self:UpdatePartyFrames()
-		self:Layout()
+		self:DoLayout()
 	end
 end
 
 function SoulPartyFrameMixin:ShouldShow()
 	return ShouldShowPartyFrames()
+end
+
+function SoulPartyFrameMixin:UpdateLayout()
+	if SPF_DB.party_layout == "VERTICAL" then
+		self.HorizontalLayout:SetParent(nil)
+		self.VerticalLayout:SetParent(self)
+	else
+		self.VerticalLayout:SetParent(nil)
+		self.HorizontalLayout:SetParent(self)
+	end
+
+	for i = 1, MAX_PARTY_MEMBERS do
+		local PartyMemberFrame = SoulPartyFrame["MemberFrame" .. i]
+		if PartyMemberFrame then
+			PartyMemberFrame:SetParent(self:GetLayout())
+			PartyMemberFrame:UpdateAuraAnchors()
+		end
+	end
+	self:DoLayout()
+end
+
+function SoulPartyFrameMixin:GetLayout()
+	if SPF_DB.party_layout == "VERTICAL" then
+		return self.VerticalLayout
+	else
+		return self.HorizontalLayout
+	end
 end
 
 function SoulPartyFrameMixin:InitializePartyMemberFrames()
@@ -94,7 +140,9 @@ function SoulPartyFrameMixin:InitializePartyMemberFrames()
 		-- Set for debugging purposes.
 		memberFrame:SetParentKey("MemberFrame"..i)
 		_G["SoulPartyFrame"..i] = memberFrame
+		self["MemberFrame"..i] = memberFrame
 
+		memberFrame:SetParent(self:GetLayout())
 		memberFrame:SetAttribute("unit", "party"..i)
 		memberFrame:RegisterForClicks("AnyUp")
 		memberFrame:SetAttribute("*type1", "target") -- Target unit on left click
@@ -118,7 +166,7 @@ function SoulPartyFrameMixin:UpdateMemberFrames()
 		memberFrame:UpdateMember()
 	end
 
-	self:Layout()
+	self:DoLayout()
 end
 
 function SoulPartyFrameMixin:HidePartyFrames()
@@ -133,7 +181,7 @@ function SoulPartyFrameMixin:UpdatePaddingAndLayout()
     self.topPadding = 10
     self.bottomPadding = 10
 
-	self:Layout()
+	self:DoLayout()
 end
 
 function SoulPartyFrameMixin:UpdatePartyFrames()

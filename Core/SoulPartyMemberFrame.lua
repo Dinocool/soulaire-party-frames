@@ -221,7 +221,7 @@ function SoulPartyMemberFrameMixin:Setup()
 
 	self.ManaBar:GetStatusBarTexture():AddMaskTexture(self.ManaBar.ManaBarMask)
 
-	self:CreateAuras(self.layoutIndex)
+	self:CreateAuras()
 	self:UpdateName()
 	self:UpdateMember()
 	self:UpdateLeader()
@@ -303,6 +303,7 @@ function SoulPartyMemberFrameMixin:UpdateMember()
 	end
 
 	if showFrame then
+		--TODO: check if we're in combat.i
 		self:Show()
 		if VoiceActivityManager then
 			local guid = UnitGUID(self:GetUnit())
@@ -398,7 +399,6 @@ end
 function SoulPartyMemberFrameMixin:UpdateAssignedRoles()
 	local icon = self.PartyMemberOverlay.RoleIcon
 	local role = UnitGroupRolesAssignedEnum(self:GetUnit())
-
 	if role == Enum.LFGRole.Tank then
 		icon:SetAtlas("UI-LFG-RoleIcon-Tank")
 		icon:Show()
@@ -499,7 +499,6 @@ function SoulPartyMemberFrameMixin:OnEvent(event, ...)
 	--securecall("UnitFrame_OnEvent", self, event, ...)
 
 	local arg1, arg2, arg3 = ...
-	local selfID = self.layoutIndex
 
 	if event == "UNIT_NAME_UPDATE" and arg1 == self.unit then
 		self:UpdateName()
@@ -702,7 +701,7 @@ function SoulPartyMemberFrameMixin:UpdateAuras(unitAuraUpdateInfo)
 		end
 	end
 	if buffsChanged or debuffsChanged then
-		self:AurasUpdate(self.layoutIndex,buffsChanged,debuffsChanged)
+		self:AurasUpdate(buffsChanged,debuffsChanged)
 	end
 end
 
@@ -730,28 +729,26 @@ function SoulPartyMemberFrameMixin:ParseAllAuras()
 	AuraUtil.ForEachAura(self.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful, AuraUtil.AuraFilters.Raid), batchCount, HandleAura, usePackedAura);
 end
 
-local function CreateAura(partyMember, auraIndex, auraType, anchor, x, y)
-    local partyMemberAuraFrame = "SPF_PartyAuras"..partyMember..auraType
-    local auraButtonName = partyMemberAuraFrame..auraIndex
+function SoulPartyMemberFrameMixin:CreateAura(auraIndex, auraType)
+	if not self.auras then self.auras={} end
 
-    local aura = CreateFrame("Button", auraButtonName, _G["SoulPartyFrame"]["MemberFrame"..partyMember])
-
+    local auraButtonName = auraType..auraIndex
+    local aura = CreateFrame("Button", auraButtonName, self)
+	self.auras[auraButtonName] = aura
     aura:SetFrameLevel(7)
     aura:SetWidth(24)
     aura:SetHeight(24)
     aura:SetID(auraIndex)
-    aura:ClearAllPoints()
-    if auraIndex == 1 then
-        aura:SetPoint("RIGHT", _G["SoulPartyFrame"]["MemberFrame"..partyMember], anchor, x, y)
-    else
-        aura:SetPoint("LEFT", _G[partyMemberAuraFrame..auraIndex-1], "RIGHT", 6, 0)
-    end
-    aura:SetAttribute("unit", "party"..partyMember)
+    aura:SetAttribute("unit", "party"..self.layoutIndex)
     RegisterUnitWatch(aura)
 
-    aura.Icon = aura:CreateTexture(auraButtonName.."Icon", "ARTWORK")
+    aura.Icon = aura:CreateTexture(auraButtonName.."Icon", "BACKGROUND")
     aura.Icon:SetAllPoints(aura)
-
+	aura.IconMask = aura:CreateMaskTexture()
+	aura.IconMask:SetPoint("TOPLEFT",0,0)
+	aura.IconMask:SetPoint("BOTTOMRIGHT",22,-22)
+	aura.IconMask:SetTexture("interface/common/commoniconmask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+	--aura.Icon:AddMaskTexture(aura.IconMask)
     aura.Cooldown = CreateFrame("Cooldown", auraButtonName.."Cooldown", aura, "CooldownFrameTemplate")
     aura.Cooldown:SetFrameLevel(8)
     aura.Cooldown:SetReverse(true)
@@ -760,7 +757,6 @@ local function CreateAura(partyMember, auraIndex, auraType, anchor, x, y)
     aura.Cooldown:SetParent(aura)
     --aura.Cooldown:SetHideCountdownNumbers(true)
 	aura.Cooldown:SetCountdownFont("SystemFont_Shadow_Med3")
-
     --aura.CooldownText = aura.Cooldown:CreateFontString(auraButtonName.."CooldownText", "OVERLAY")
     --aura.CooldownText:SetFont(GameFontNormal:GetFont(), 12, "OUTLINE")
     --aura.CooldownText:SetTextColor(1, 1, 1)--(1, 0.75, 0)
@@ -773,7 +769,8 @@ local function CreateAura(partyMember, auraIndex, auraType, anchor, x, y)
     aura.CountText:ClearAllPoints()
     aura.CountText:SetPoint("CENTER", aura.Icon, "TOPRIGHT", 0, 0)
 
-    aura.Border = aura:CreateTexture(auraButtonName.."Border", "OVERLAY")
+	aura.BorderFrame = CreateFrame("Frame","BorderFrame",aura)
+    aura.Border = aura.BorderFrame:CreateTexture(auraButtonName.."Border", "OVERLAY")
     aura.Border:SetAtlas("talents-node-choiceflyout-square-sheenmask")
     aura.Border:SetWidth(24+2)
     aura.Border:SetHeight(24+2)
@@ -781,24 +778,51 @@ local function CreateAura(partyMember, auraIndex, auraType, anchor, x, y)
     aura.Border:ClearAllPoints()
     aura.Border:SetPoint("TOPLEFT", aura, "TOPLEFT", -1, 1)
 
+	aura.SheenFrame = CreateFrame("Frame","SheenFrame",aura)
+	aura.SheenFrame:SetWidth(64)
+    aura.SheenFrame:SetHeight(32)
+	aura.SheenFrame:SetPoint("TOPLEFT")
+	aura.Sheen = aura.SheenFrame:CreateTexture("AuraSheen","OVERLAY")
+	aura.Sheen:SetPoint("TOPLEFT",-32,23)
+	aura.Sheen:SetAtlas("loottoast-sheen")
+	aura.Sheen:SetBlendMode("ADD")
+	aura.Sheen:SetWidth(64)
+    aura.Sheen:SetHeight(64)
+	aura.Sheen:AddMaskTexture(aura.IconMask)
+	aura.Sheen:Hide()
+	self:AddSwipeAnimation(aura.Sheen)
+	
     aura:EnableMouse(true)
     aura:SetScript("OnLeave",function()
         GameTooltip:Hide()
     end)
 end
 
-local function SetAura(aura, auraType, partyMember, auraIndex)
-    local partyMemberAuraFrame = "SPF_PartyAuras"..partyMember..auraType
-    local auraButtonName = partyMemberAuraFrame..auraIndex
+function SoulPartyMemberFrameMixin:AddSwipeAnimation(frame)
+    if not frame.SwipeAnimation then
+        frame.SwipeAnimation = frame:CreateAnimationGroup()
+        local animGroup = frame.SwipeAnimation
+        animGroup.Swipe = animGroup:CreateAnimation("Translation")
+        animGroup.Swipe:SetDuration(0.75)
+        animGroup.Swipe:SetOffset(64*1.5,0)
+        animGroup.Swipe:SetSmoothing("OUT")
+        animGroup:HookScript("OnPlay",function(self) frame:Show() end)
+		animGroup:HookScript("OnFinished",function(self) frame:Hide() end)
+        animGroup:SetLooping("NONE")
+    end
+end
 
-    local auraButton = _G[auraButtonName]
+function SoulPartyMemberFrameMixin:SetAura(aura, auraType, auraIndex)
+    local auraButtonName = auraType..auraIndex
 
+    local auraButton = self.auras[auraButtonName]
+	local layoutIndex = self.layoutIndex
 
     if aura then
 		auraButton:EnableMouse(true)
         auraButton:SetScript("OnEnter",function(self)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetUnitAura("party"..partyMember, auraIndex, auraType == "Buff" and "HELPFUL" or "HARMFUL")
+            GameTooltip:SetUnitAura("party"..layoutIndex, auraIndex, auraType == "Buff" and "HELPFUL" or "HARMFUL")
         end)
 
 		local counttext = ""
@@ -806,11 +830,17 @@ local function SetAura(aura, auraType, partyMember, auraIndex)
             counttext = aura.applications
         end
 
+		--Play an animation for new auras
+		if not aura.playedAnimation then
+			auraButton.Sheen.SwipeAnimation:Play()
+			auraButton.Sheen:SetVertexColor(1,1,1)
+			aura.playedAnimation=true
+		end
+
         auraButton.Icon:SetTexture(aura.icon)
         auraButton:SetAlpha(1)
         CooldownFrame_Set(auraButton.Cooldown, aura.expirationTime - aura.duration, aura.duration, aura.duration>0, true)
-
-        local borderColor = {r=0.7, g=0.7, b=0.7}
+        local borderColor = {r=0.5, g=0.5, b=0.5}
         --auraButton.Border:Hide()
         if aura.isHarmful then
             if not aura.dispelName then
@@ -818,10 +848,13 @@ local function SetAura(aura, auraType, partyMember, auraIndex)
             end
             borderColor = DebuffTypeColor[aura.dispelName]
             if auraIndex == 1 and SoulPartyFrame.dispels and SoulPartyFrame.dispels[string.lower(aura.dispelName)] and next(SoulPartyFrame.dispels[string.lower(aura.dispelName)]) ~= nil then
-                local partyFrame = _G["SoulPartyFrame"]["MemberFrame"..partyMember]
-                partyFrame.Flash:Show()
-                partyFrame.Flash:SetVertexColor(borderColor.r, borderColor.g, borderColor.b)
+                self.Flash:Show()
+                self.Flash:SetVertexColor(borderColor.r, borderColor.g, borderColor.b)
             end
+			auraButton.Sheen:SetVertexColor(borderColor.r, borderColor.g, borderColor.b)
+		elseif aura.isFromPlayerOrPlayerPet then
+			borderColor = {r=0.0, g=0.7, b=0.3}
+			auraButton.Sheen:SetVertexColor(borderColor.r, borderColor.g, borderColor.b)
         end
         auraButton.Border:SetVertexColor(borderColor.r, borderColor.g, borderColor.b)
 		auraButton.CountText:SetText(counttext)
@@ -832,28 +865,65 @@ local function SetAura(aura, auraType, partyMember, auraIndex)
     end
 end
 
-function SoulPartyMemberFrameMixin:AurasUpdate(partyMember,buffsChanged, debuffsChanged)
+function SoulPartyMemberFrameMixin:AurasUpdate(buffsChanged, debuffsChanged)
     self.Flash:Hide()
     -- sort buffs by duration and add them from the shortest to the longest
     if buffsChanged and self.buffs then
         for auraIndex = 1, 10 do
-            SetAura(self.buffs[auraIndex], "Buff", partyMember, auraIndex)
+            self:SetAura(self.buffs[auraIndex], "Buff", auraIndex)
         end
     end
     if debuffsChanged and self.debuffs then
         for auraIndex = 1, 10 do
-            SetAura(self.debuffs[auraIndex], "Debuff", partyMember, auraIndex)
+            self:SetAura(self.debuffs[auraIndex], "Debuff", auraIndex)
         end
     end
 end
 
-function SoulPartyMemberFrameMixin:CreateAuras(partyMember)
+function SoulPartyMemberFrameMixin:GetAuraAnchor(debuff)
+	if SPF_DB.party_layout == "VERTICAL"  then
+		if debuff then
+			return "BOTTOMRIGHT", 7, 32
+		else
+			return "TOPRIGHT", 7, -32
+		end
+	else
+		if debuff then
+			return "TOPLEFT", 50, 32
+		else
+			return "TOPLEFT", 50, 0
+		end
+	end
+end
+
+function SoulPartyMemberFrameMixin:UpdateAuraAnchors()
+	for auraIndex = 1, 10 do
+		self:SetAuraAnchor(auraIndex, "Buff", self:GetAuraAnchor(false))
+		self:SetAuraAnchor(auraIndex, "Debuff", self:GetAuraAnchor(true))
+	end
+end
+
+function SoulPartyMemberFrameMixin:SetAuraAnchor(auraIndex, auraType, anchor, x, y)
+    local auraButtonName = auraType..auraIndex
+    local aura = self.auras[auraButtonName]
+
+    aura:ClearAllPoints()
+    if auraIndex == 1 then
+        aura:SetPoint("RIGHT", self, anchor, x, y)
+    else
+        aura:SetPoint("LEFT", self.auras[auraType..auraIndex-1], "RIGHT", 6, 0)
+    end
+
+end
+
+function SoulPartyMemberFrameMixin:CreateAuras()
     local maxBuffs=10
 	local maxDebuffs=10
     for auraIndex = 1, maxBuffs do
-        CreateAura(partyMember, auraIndex, "Buff", "TOPRIGHT", 7, -32)
+        self:CreateAura(auraIndex, "Buff")
     end
     for auraIndex = 1, maxDebuffs do
-        CreateAura(partyMember, auraIndex, "Debuff", "BOTTOMRIGHT", 7, 32)
+        self:CreateAura(auraIndex, "Debuff")
     end
+	self:UpdateAuraAnchors()
 end

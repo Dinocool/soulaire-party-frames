@@ -35,6 +35,21 @@ function SPF_Config:OnEnable()
                             SoulPartyFrame_Lock()
                         end
                     },
+                    party_layout = {
+                        type = 'select',
+                        order = 3,
+                        name = 'Party Frame Layout',
+                        values = {VERTICAL="Vertical",HORIZONTAL="Horizontal" },
+                        width = 'double',
+                        desc = 'the way the frames are laid out',
+                        set = function(_, val)
+                            SPF_DB.party_layout = val
+                            SoulPartyFrame:UpdateLayout()
+                        end,
+                        get = function()
+                            return SPF_DB.party_layout
+                        end
+                    },
                     party_scale = {
                         type = 'range',
                         min = 0.1,
@@ -86,7 +101,7 @@ function SPF_Config:OnEnable()
                         type = 'range',
                         min = 0.0,
                         max = 1.0,
-                        step = 0.05,
+                        step = 0.01,
                         order = 6,
                         name = 'Damage Flash Threshold',
                         desc = 'The Threshold at which a party frame will flash to indicate heavy damage taken',

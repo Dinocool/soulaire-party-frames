@@ -1,12 +1,8 @@
 <Ui xmlns='http://www.blizzard.com/wow/ui/'>
-	<Frame name="SoulPartyFrame" mixin="SoulPartyFrameMixin" inherits="VerticalLayoutFrame, PingTopLevelPassThroughAttributeTemplate, SecureGroupHeaderTemplate" frameStrata="LOW" parent="UIParent" toplevel="true">
-		<KeyValues>
-			<KeyValue key="bottomPadding" value="2" type="number"/>
-			<KeyValue key="spacing" value="-10" type="number"/>
-		</KeyValues>
+	<Frame name="SoulPartyFrame" mixin="SoulPartyFrameMixin" inherits="PingTopLevelPassThroughAttributeTemplate, ResizeLayoutFrame, SecureGroupHeaderTemplate" frameStrata="LOW" parent="UIParent" toplevel="true">
 		<Layers>
 			<Layer level="BACKGROUND" textureSubLevel="2">
-				<Texture parentKey="Background" setAllPoints="true" hidden="true">
+				<Texture parentKey="Background" setAllPoints="true" hidden="false">
 					<Color r="0" b="0.2" g="0" a="0.5"/>
 				</Texture>
 			</Layer>
@@ -14,6 +10,26 @@
 		<Anchors>
 			<Anchor point="TOPLEFT"/>
 		</Anchors>
+		<Frames>
+			<Frame parentKey="VerticalLayout" inherits="VerticalLayoutFrame, PingTopLevelPassThroughAttributeTemplate" frameStrata="LOW">
+				<KeyValues>
+					<KeyValue key="bottomPadding" value="2" type="number"/>
+					<KeyValue key="spacing" value="-10" type="number"/>
+				</KeyValues>
+				<Anchors>
+					<Anchor point="TOPLEFT"/>
+				</Anchors>
+			</Frame>
+			<Frame parentKey="HorizontalLayout" inherits="HorizontalLayoutFrame, PingTopLevelPassThroughAttributeTemplate" frameStrata="LOW">
+				<KeyValues>
+					<KeyValue key="bottomPadding" value="2" type="number"/>
+					<KeyValue key="spacing" value="-10" type="number"/>
+				</KeyValues>
+				<Anchors>
+					<Anchor point="TOPLEFT"/>
+				</Anchors>
+			</Frame>
+		</Frames>
 		<Scripts>
 			<OnLoad method="OnLoad" inherit="append"/>
 			<OnShow method="OnShow"/>

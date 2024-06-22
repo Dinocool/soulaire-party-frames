@@ -59,7 +59,7 @@ function SoulManaBarMixin:UpdatePowerType()
     --Information defined by blizzard on how to display this power
     local info = PowerBarColor[powerToken];
     local manaBarTexture;
-    if (info) then
+    if (info and info.atlasElementName) then
         --TODO: Add support for animations (cool!)
         manaBarTexture = "UI-HUD-UnitFrame-Player-PortraitOn-Bar-"..info.atlasElementName;
         self:SetStatusBarColor(1, 1, 1);

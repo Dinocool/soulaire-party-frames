@@ -19,13 +19,14 @@ SINGLE_TARGET_PATTERNS={
     THEIR_TARGET="their target",
     RANDOM_TARGET="random target",
     RANDOM_PLAYER="random player",
-    TARGET_PLAYER="target player"
+    TARGET_PLAYER="target player",
+    STRIKE_A_PLAYER="strikes a player"
 }
 
 GLOBAL_AREA_PATTERNS={
     WITHIN_YARDS="enemies within",
     WITHIN_YDS="to players within",
-    TO_ALL_PLAYERS="to all players"
+    ALL_PLAYERS="all players"
 }
 
 DISTANCE_PATTERNS={
@@ -37,17 +38,29 @@ ZONE_PATTERNS={
     IN_FRONT="in front"
 }
 
+TICK_PATTERNS={
+    EVERY_SEC="every (%d[,.%d]*) sec",
+    EVERY_SEC_FOR="every (%d[,.%d]*) sec"
+}
+
+DURATION_PATTERNS={
+    EVERY_SEC="for (%d[,.%d]*) sec",
+    AFTER="after (%d[,.%d]*) sec"
+}
+
 DAMAGE_TYPE_PATTERNS={
     PHYSICAL="physical"
 }
 
 function IncomingDamagePredictMixin:Initialize()
     self:RegisterEvent("UNIT_SPELLCAST_START")
+    self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
     self:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
     self:RegisterEvent("UNIT_SPELLCAST_STOP")
     self:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
     self:RegisterEvent("UNIT_SPELLCAST_FAILED")
     self:RegisterEvent("UNIT_SPELLCAST_FAILED_QUIET")
+    self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
     self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
     
     self:SetScript("OnEvent", self.OnEvent)
@@ -95,7 +108,7 @@ function IncomingDamagePredictMixin:OnEvent(event, ...)
                 local spellInfo, created = self:GetSpellInfo(spellID)
                 --ignore spells that have no cast time
                 if spellInfo.castTime == 0 then return end
-                if event == "UNIT_SPELLCAST_START"  then
+                if event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" then
                     if created then
                         local spell = Spell:CreateFromSpellID(spellID)
                         spell:ContinueOnSpellLoad(function()
@@ -178,21 +191,34 @@ local function IsNumeric(value)
 end
 
 function IncomingDamagePredictMixin:ParseTooltip(full_description, spellInfo, explain)
-    full_description = string.lower(full_description)
 
+    --ignore
+    if spellInfo.modifed then return end
+
+    spellInfo.area = true
+    spellInfo.zone = true
+    spellInfo.magic = true
+    spellInfo.dot = false
+    spellInfo.tickRate = nil
+    spellInfo.duration = nil
+    spellInfo.damage = nil
+    spellInfo.delayedDamage = nil
+
+    full_description = string.lower(full_description)
     --break the description into sections based on newlines and only match the first
     for description in string.gmatch(full_description,"[^\r\n]+") do
         for k,v in pairs(DAMAGE_PATTERNS) do
             local damage, damageType = string.match(description,v)
             if damage then
                 if explain then
-                    print("Matched on: " .. v)
+                    print("Matched on: " .. v .. " damage: " .. tostring(damage) .. " damageType: " .. tostring(damageType))
                 end
-                spellInfo.damage = tonumber ((string.gsub(damage, ",", "")))
+                if not spellInfo.damage then
+                    spellInfo.damage = tonumber ((string.gsub(damage, ",", "")))
+                else
+                    spellInfo.delayedDamage = tonumber ((string.gsub(damage, ",", "")))
+                end
                 spellInfo.damageType = damageType
-                spellInfo.area = true
-                spellInfo.zone = true
-                spellInfo.magic = true
                 for k,v in pairs(SINGLE_TARGET_PATTERNS) do
                     if string.match(description,v) then
                         if explain then
@@ -215,17 +241,26 @@ function IncomingDamagePredictMixin:ParseTooltip(full_description, spellInfo, ex
                             if explain then
                                 print("distance: " .. distance)
                             end
-                            if (numeric and tonumber(distance) >= 30) or (not numeric and distance) then
-                                if explain then
-                                    print("Matched on: " .. v .. " distance: " .. distance)
+                            if numeric then
+                                if tonumber(distance) >= 30 then
+                                    if explain then
+                                        print("Matched on: " .. v .. " distance: " .. distance)
+                                    end
+                                    spellInfo.zone = false
+                                else
+                                    if explain then
+                                        print("Distance to small, distance: " .. distance)
+                                    end
                                 end
-                                spellInfo.zone = false
                                 foundDistance=true
                                 break
                             end
                         end
                         --No distance found in the tooltip, assume it hits all targets
                         if not foundDistance then
+                            if explain then
+                                print("no distance found, treating as unlimited distance")
+                            end
                             spellInfo.zone = false
                         end
                     end
@@ -239,6 +274,26 @@ function IncomingDamagePredictMixin:ParseTooltip(full_description, spellInfo, ex
                         break
                     end
                 end
+                for k,v in pairs(TICK_PATTERNS) do
+                    local tick = string.match(description,v)
+                    if tick then
+                        if explain then
+                            print("Matched on: " .. v .. " tick rate: " .. tick)
+                        end
+                        spellInfo.tickRate = tick
+                        break
+                    end
+                end
+                for k,v in pairs(DURATION_PATTERNS) do
+                    local duration = string.match(description,v)
+                    if duration then
+                        if explain then
+                            print("Matched on: " .. v .. " duration: " .. duration)
+                        end
+                        spellInfo.duration = duration
+                        break
+                    end
+                end
                 for k,v in pairs(DAMAGE_TYPE_PATTERNS) do
                     if string.match(damageType,v) then
                         if explain then
@@ -248,14 +303,19 @@ function IncomingDamagePredictMixin:ParseTooltip(full_description, spellInfo, ex
                         break
                     end
                 end
-                --print("Detected spell using lookup "..k.." that does " .. spellInfo.damage .. " damageType: " .. spellInfo.damageType .. " and is aoe " .. tostring(spellInfo.area) .. " and is not global " .. tostring(spellInfo.zone))
-                --print(description)
-                return spellInfo
+                if spellInfo.tickRate and not spellInfo.duration then
+                    if explain then
+                        print("Found a tick rate but no duration component, scanning next paragraphs")
+                    end
+                else
+                    return spellInfo
+                end
             end
         end
     end
     print("Undected spell: " .. full_description)
     spellInfo.undetected=true
+    return spellInfo
 end
 
 --calculates the amount of dr a target will have against a units ttack

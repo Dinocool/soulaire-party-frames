@@ -16,7 +16,8 @@ function SPF:OnInitialize()
             max_party_debuffs=10,
             flash_threshold=0.1,
             show_damage_prediction=false,
-            spell_data={}
+            spell_data={},
+            layout="VERTICAL"
         },
     }
 
