@@ -41,10 +41,10 @@ function SPF_Config:OnEnable()
                         name = 'Party Frame Layout',
                         values = {VERTICAL="Vertical",HORIZONTAL="Horizontal" },
                         width = 'double',
-                        desc = 'the way the frames are laid out',
+                        desc = 'the way the frames are laid out (Requires reload)',
                         set = function(_, val)
                             SPF_DB.party_layout = val
-                            SoulPartyFrame:UpdateLayout()
+                            --SoulPartyFrame:UpdateLayout()
                         end,
                         get = function()
                             return SPF_DB.party_layout
@@ -110,6 +110,20 @@ function SPF_Config:OnEnable()
                         end,
                         get = function()
                             return SPF_DB.flash_threshold
+                        end
+                    },
+                    show_player_frame = {
+                        type = 'toggle',
+                        order = 7,
+                        name = 'Show Player Frame in Party Frame',
+                        width = 'double',
+                        desc = 'Shows the player frame inside the party frame',
+                        set = function(_, val)
+                            SPF_DB.show_player_frame = val
+                            SoulPartyFrame:UpdateLayout()
+                        end,
+                        get = function()
+                            return SPF_DB.show_player_frame
                         end
                     },
                     party_damage_prediction = {

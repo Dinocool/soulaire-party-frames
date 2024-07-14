@@ -198,6 +198,7 @@
         "BOOKTYPE_SPELL",
         "toString",
         "ZONE",
-        "CHANNEL"
+        "CHANNEL",
+        "SecureGroupHeader_Update"
     ]
 }

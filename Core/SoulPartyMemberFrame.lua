@@ -41,7 +41,6 @@ end
 
 function SoulPartyMemberFrameMixin:NoPowerBarPlayerArt()
     self.Texture:SetAtlas("plunderstorm-UI-HUD-UnitFrame-Player-PortraitOn-2x")
-
     self.Flash:SetAtlas("plunderstorm-UI-HUD-UnitFrame-Player-PortraitOn-InCombat-2x", TextureKitConstants.UseAtlasSize)
 
     self.HealthBar:SetWidth(124)
@@ -154,10 +153,25 @@ function SoulPartyMemberFrameMixin:UpdateManaBarTextAnchors()
 	end
 end
 
+function SoulPartyMemberFrameMixin:OnAttributeChanged(attribute, value)
+	if attribute == "unit" and self.unit ~= value then
+		self:OnUnitChanged()
+		self:UpdateAssignedRoles()
+	end
+end
+
+function SoulPartyMemberFrameMixin:OnUnitChanged()
+	self:Setup()
+	self.PortraitFrame:Update()
+end
+
+function SoulPartyMemberFrameMixin:OnShow()
+	--self:Setup()
+end
+
 function SoulPartyMemberFrameMixin:Setup()
     self.soulaireFrame = true
-	self.unit = "party"..self.layoutIndex
-	self.petUnitToken = "partypet"..self.layoutIndex
+	self.unit = self:GetAttribute("unit")
 
 	self.debuffCountdown = 0
 	self.numDebuffs = 0
@@ -206,6 +220,7 @@ end
 function SoulPartyMemberFrameMixin:RegisterEvents()
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
 	self:RegisterEvent("GROUP_ROSTER_UPDATE")
+	self:RegisterEvent("PLAYER_ROLES_ASSIGNED")
 	self:RegisterEvent("UPDATE_ACTIVE_BATTLEFIELD")
 	self:RegisterEvent("PARTY_LEADER_CHANGED")
 	self:RegisterEvent("PARTY_LOOT_METHOD_CHANGED")
@@ -455,7 +470,6 @@ function SoulPartyMemberFrameMixin:OnEvent(event, ...)
 	--securecall("UnitFrame_OnEvent", self, event, ...)
 
 	local arg1, arg2, arg3 = ...
-
 	if event == "UNIT_NAME_UPDATE" and arg1 == self.unit then
 		self:UpdateName()
 	elseif event == "PLAYER_ENTERING_WORLD" then
@@ -469,6 +483,8 @@ function SoulPartyMemberFrameMixin:OnEvent(event, ...)
 		self:UpdateArt()
 		self:UpdateAssignedRoles()
 		self:UpdateLeader()
+	elseif event == "PLAYER_ROLES_ASSIGNED" then
+		self:UpdateAssignedRoles()
 	elseif event == "PARTY_LEADER_CHANGED" then
 		self:UpdateLeader()
 	elseif event == "MUTELIST_UPDATE" or event == "IGNORELIST_UPDATE" then
@@ -583,7 +599,7 @@ end
 
 function SoulPartyMemberFrameMixin:InitializePartyFrameDropDown()
 	local dropdown = UIDROPDOWNMENU_OPEN_MENU or self.DropDown
-	UnitPopup_ShowMenu(dropdown, "PARTY", "party"..dropdown:GetParent().layoutIndex)
+	UnitPopup_ShowMenu(dropdown, "PARTY", self.unit)
 end
 
 function SoulPartyMemberFrameMixin:UpdateAuras(unitAuraUpdateInfo)
@@ -681,7 +697,7 @@ function SoulPartyMemberFrameMixin:CreateAura(auraIndex, auraType)
     aura:SetWidth(24)
     aura:SetHeight(24)
     aura:SetID(auraIndex)
-    aura:SetAttribute("unit", "party"..self.layoutIndex)
+    aura:SetAttribute("unit", self.unit)
     RegisterUnitWatch(aura)
 
     aura.Icon = aura:CreateTexture(auraButtonName.."Icon", "BACKGROUND")
@@ -758,13 +774,12 @@ function SoulPartyMemberFrameMixin:SetAura(aura, auraType, auraIndex)
     local auraButtonName = auraType..auraIndex
 
     local auraButton = self.auras[auraButtonName]
-	local layoutIndex = self.layoutIndex
 
     if aura then
 		auraButton:EnableMouse(true)
         auraButton:SetScript("OnEnter",function(self)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetUnitBuffByAuraInstanceID("party"..layoutIndex, aura.auraInstanceID, auraType == "Buff" and "HELPFUL" or "HARMFUL")
+            GameTooltip:SetUnitBuffByAuraInstanceID(self.unit, aura.auraInstanceID, auraType == "Buff" and "HELPFUL" or "HARMFUL")
         end)
 
 		local counttext = ""
@@ -825,15 +840,15 @@ end
 function SoulPartyMemberFrameMixin:GetAuraAnchor(debuff)
 	if SPF_DB.party_layout == "VERTICAL"  then
 		if debuff then
-			return "BOTTOMRIGHT", 7, 32
+			return "TOPLEFT", 48, 39
 		else
-			return "TOPRIGHT", 7, -32
+			return "TOPLEFT", 48, 7
 		end
 	else
 		if debuff then
-			return "TOPLEFT", 50, 32
+			return "TOPLEFT", 240, -40
 		else
-			return "TOPLEFT", 50, 0
+			return "TOPLEFT", 240, -72
 		end
 	end
 end

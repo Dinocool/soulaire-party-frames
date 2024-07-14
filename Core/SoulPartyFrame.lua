@@ -1,12 +1,6 @@
 SoulPartyFrameMixin = {}
 
 function SoulPartyFrameMixin:OnLoad()
-    local function PartyMemberFrameReset(framePool, frame)
-		frame.layoutIndex = nil
-		FramePool_HideAndClearAnchors(framePool, frame)
-	end
-
-    self.PartyMemberFramePool = CreateFramePool("BUTTON", self, "SoulPartyMemberFrameTemplate", PartyMemberFrameReset)
 	self:RegisterEvent("GROUP_ROSTER_UPDATE")
 	self:RegisterEvent("PLAYER_TALENT_UPDATE")
     self:RegisterForDrag("LeftButton")
@@ -29,11 +23,6 @@ function SoulPartyFrameMixin:StopDrag()
 		SPF_DB.party_position_x = x
 		SPF_DB.party_position_y = y
 	end
-end
-
-function SoulPartyFrameMixin:DoLayout()
-	self:GetLayout():Layout()
-	self:Layout()
 end
 
 function SoulPartyFrame_UpdateSettingFrameSize()
@@ -60,16 +49,10 @@ function SoulPartyFrame_UpdateSettingFramePoint()
 end
 
 function SoulPartyFrameMixin:OnShow()
+
+	--Load settings from profile
+	self:LoadSettings()
 	self:InitializePartyMemberFrames()
-	self:UpdatePartyFrames()
-	
-	if SPF_DB.party_layout == "VERTICAL" then
-		self.HorizontalLayout:SetParent(nil)
-		self.VerticalLayout:SetParent(self)
-	else
-		self.VerticalLayout:SetParent(nil)
-		self.HorizontalLayout:SetParent(self)
-	end
 
 	--Populate what dispells our player knows
 	self.dispels=SOUL_GetClassDispels("player")
@@ -86,14 +69,12 @@ function SoulPartyFrameMixin:OnShow()
 		self.DamagePrediction = Mixin(self.DamagePrediction,IncomingDamagePredictMixin)
 		self.DamagePrediction:Initialize()
 	end
-	self:DoLayout()
 end
 function SoulPartyFrameMixin:OnEvent(event, ...)
 	if event == "PLAYER_TALENT_UPDATE" then
 		self.dispels = SOUL_GetClassDispels("player")
-	else
-		self:UpdatePartyFrames()
-		self:DoLayout()
+	elseif event == "GROUP_ROSTER_UPDATE" then
+		self:InitializePartyMemberFrames()
 	end
 end
 
@@ -101,23 +82,33 @@ function SoulPartyFrameMixin:ShouldShow()
 	return ShouldShowPartyFrames()
 end
 
-function SoulPartyFrameMixin:UpdateLayout()
+function SoulPartyFrameMixin:LoadSettings()
 	if SPF_DB.party_layout == "VERTICAL" then
-		self.HorizontalLayout:SetParent(nil)
-		self.VerticalLayout:SetParent(self)
+		self:SetAttribute("point","LEFT")
 	else
-		self.VerticalLayout:SetParent(nil)
-		self.HorizontalLayout:SetParent(self)
+		self:SetAttribute("point","TOP")
 	end
 
-	for i = 1, MAX_PARTY_MEMBERS do
-		local PartyMemberFrame = SoulPartyFrame["MemberFrame" .. i]
-		if PartyMemberFrame then
-			PartyMemberFrame:SetParent(self:GetLayout())
-			PartyMemberFrame:UpdateAuraAnchors()
-		end
+	self:SetAttribute("showPlayer",SPF_DB.show_player_frame)
+end
+
+function SoulPartyFrameMixin:UpdateLayout()
+	self:LoadSettings()
+	for i = 1, (MAX_PARTY_MEMBERS + 1) do
+		local memberFrame = self[i]
+		if not memberFrame then return end
+		memberFrame:UpdateAuraAnchors()
 	end
-	self:DoLayout()
+	--SECURE
+	SecureGroupHeader_Update(self)
+end
+
+function SoulPartyFrameMixin:UpdateMemberFrames()
+	for i = 1, (MAX_PARTY_MEMBERS + 1) do
+		local memberFrame = self[i]
+		if not memberFrame then return end
+		memberFrame:UpdateMember()
+	end
 end
 
 function SoulPartyFrameMixin:GetLayout()
@@ -128,71 +119,10 @@ function SoulPartyFrameMixin:GetLayout()
 	end
 end
 
-function SoulPartyFrameMixin:InitializePartyMemberFrames()
-	local memberFramesToSetup = {}
-
-	self.PartyMemberFramePool:ReleaseAll()
-	for i = 1, MAX_PARTY_MEMBERS do
-		local memberFrame = self.PartyMemberFramePool:Acquire()
-
-		-- Set for debugging purposes.
-		memberFrame:SetParentKey("MemberFrame"..i)
-		_G["SoulPartyFrame"..i] = memberFrame
-		self["MemberFrame"..i] = memberFrame
-
-		memberFrame:SetParent(self:GetLayout())
-		memberFrame:SetAttribute("unit", "party"..i)
-		memberFrame:RegisterForClicks("AnyUp")
-		memberFrame:SetAttribute("*type1", "target") -- Target unit on left click
-		memberFrame:SetAttribute("*type2", "togglemenu") -- Toggle units menu on left click
-		memberFrame:SetAttribute("*type3", "assist") -- On middle click, target the target of the clicked unit
-
-		memberFrame:SetPoint("TOPLEFT")
-		memberFrame.layoutIndex = i
-		memberFramesToSetup[i] = memberFrame
-		memberFrame:SetShown(self:ShouldShow())
-	end
-	for _, frame in ipairs(memberFramesToSetup) do
-		frame:Setup()
-	end
-    
-	self:UpdatePaddingAndLayout()
-end
-
-function SoulPartyFrameMixin:UpdateMemberFrames()
-	for memberFrame in self.PartyMemberFramePool:EnumerateActive() do
-		memberFrame:UpdateMember()
-	end
-
-	self:DoLayout()
-end
-
 function SoulPartyFrameMixin:HidePartyFrames()
 	for memberFrame in self.PartyMemberFramePool:EnumerateActive() do
 		memberFrame:Hide()
 	end
-end
-
-function SoulPartyFrameMixin:UpdatePaddingAndLayout()
-	self.leftPadding = 10
-	self.rightPadding = 10
-    self.topPadding = 10
-    self.bottomPadding = 10
-
-	self:DoLayout()
-end
-
-function SoulPartyFrameMixin:UpdatePartyFrames()
-	local showPartyFrames = self:ShouldShow()
-	for memberFrame in self.PartyMemberFramePool:EnumerateActive() do
-		if showPartyFrames then
-			memberFrame:UpdateMember()
-		else
-			memberFrame:Hide()
-		end
-	end
-
-	self:UpdatePaddingAndLayout()
 end
 
 function SoulPartyFrame_Unlock()
@@ -227,6 +157,23 @@ function SoulPartyFrame_IsUnlocked()
 	return SoulPartyFrame:IsMovable()
 end
 
+function SoulPartyFrameMixin:InitializePartyMemberFrames()
+	for i = 1, (MAX_PARTY_MEMBERS + 1) do
+		local memberFrame = self[i]
+		if not memberFrame or memberFrame.configured then return end
+		-- Set for debugging purposes.
+		memberFrame:SetParentKey("MemberFrame"..i)
+		_G["SoulPartyFrame"..i] = memberFrame
+
+		memberFrame:RegisterForClicks("AnyUp")
+		memberFrame:SetAttribute("*type1", "target") -- Target unit on left click
+		memberFrame:SetAttribute("*type2", "togglemenu") -- Toggle units menu on left click
+		memberFrame:SetAttribute("*type3", "assist") -- On middle click, target the target of the clicked unit
+		memberFrame.configured=true
+
+		--memberFrame:SetPoint("TOPLEFT")
+	end
+end
 
 function SOUL_GetClassDispels(unit)
     local _, class = UnitClass(unit)

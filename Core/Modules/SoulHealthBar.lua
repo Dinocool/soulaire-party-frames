@@ -74,13 +74,13 @@ function SoulHealthBarMixin:UpdateDamagePrediction()
 end
 
 
-local function AddOffsetAnimation(frame)
+local function AddOffsetAnimation(frame, duration)
     if not frame.PulseAnimation then
         frame.PulseAnimation = frame:CreateAnimationGroup()
         local animGroup = frame.PulseAnimation
         animGroup.Pulse = animGroup:CreateAnimation("TextureCoord")
         animGroup.Pulse:SetOffset(1.0,0.0)
-		animGroup.Pulse:SetDuration(5.0)
+		animGroup.Pulse:SetDuration(duration)
         
         animGroup:SetLooping("REPEAT")
         animGroup:Play()
@@ -105,7 +105,17 @@ function SoulHealthBarMixin:InitializeHealPrediction()
 
 	self.TotalAbsorbBar:SetFillColor(CreateColor(1,1,1,0.25))
 	self.DamagePredictionBar:SetFillColor(CreateColor(1,0,0,0.8))
-	AddOffsetAnimation(self.TotalAbsorbBar.TiledFillOverlay)
+	AddOffsetAnimation(self.TotalAbsorbBar.TiledFillOverlay,5.0)
+
+	--Overheal bar fx
+	if not self.HealAbsorbBar.Poison then
+		self.HealAbsorbBar.Poison = self.HealAbsorbBar:CreateTexture("Poison","ARTWORK")
+		self.HealAbsorbBar.Poison:SetAllPoints(self.HealAbsorbBar)
+		self.HealAbsorbBar.Poison:SetTexture("Interface/GLUES/Models/UI_dracthyr/7FX_EnergyScroll_Fire_A",true)
+		self.HealAbsorbBar.Poison:SetVertexColor(0,0.2,0)
+		self.HealAbsorbBar.Poison:AddMaskTexture(self.HealAbsorbBar.FillMask)
+		AddOffsetAnimation(self.HealAbsorbBar.Poison,10.0)
+	end
 	
 	self.totalPredictedDamage=0
 	self:UpdateDamagePrediction()
@@ -128,7 +138,7 @@ end
 
 
 --This is called extremely frequently, so don't put anything expensive here
-function SoulHealthBarMixin:OnFrequentUpdate()
+function SoulHealthBarMixin:OnFrequentUpdate(elapsed)
     if ( not self.disconnected ) then
         self:AdjustHealth(UnitHealth(self.unit))
     end
@@ -136,7 +146,7 @@ end
 
 function SoulHealthBarMixin:AdjustHealth(value)
 	local currValue = self:GetValue()
-	local _,maxValue = self:GetMinMaxValues()
+	local minValue,maxValue = self:GetMinMaxValues()
 	local percentage = (currValue-value)/maxValue
 	if self.thresholdValue and percentage > self.thresholdValue then
 		self.HealthBarTexture.FlashAnimation:Stop()

@@ -11,6 +11,7 @@ function SPF:OnInitialize()
             party_locked = true,
             party_scale = 1,
             show_power_bars=false,
+            show_player_frame=false,
             class_color_health_bars=true,
             max_party_buffs=10,
             max_party_debuffs=10,
