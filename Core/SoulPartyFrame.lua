@@ -1,6 +1,7 @@
 SoulPartyFrameMixin = {}
 
 function SoulPartyFrameMixin:OnLoad()
+	_G["SoulPartyFrame"] = self
 	self:RegisterEvent("GROUP_ROSTER_UPDATE")
 	self:RegisterEvent("INSTANCE_GROUP_SIZE_CHANGED")
 	self:RegisterEvent("PLAYER_TALENT_UPDATE")
@@ -170,8 +171,8 @@ function SoulPartyFrameMixin:InitializePartyMemberFrames()
 		local memberFrame = self[i]
 		if not memberFrame or memberFrame.configured then return end
 		-- Set for debugging purposes.
-		memberFrame:SetParentKey("MemberFrame"..i)
 		_G["SoulPartyFrame"..i] = memberFrame
+		_G["SUFHeaderparty"..i] = memberFrame
 
 		memberFrame:RegisterForClicks("AnyUp")
 		memberFrame:SetAttribute("*type1", "target") -- Target unit on left click

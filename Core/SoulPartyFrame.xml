@@ -1,5 +1,5 @@
 <Ui xmlns='http://www.blizzard.com/wow/ui/'>
-	<Frame name="SoulPartyFrame" mixin="SoulPartyFrameMixin" inherits="PingTopLevelPassThroughAttributeTemplate, ResizeLayoutFrame, SecureGroupHeaderTemplate" frameStrata="LOW" parent="UIParent" toplevel="true">
+	<Frame name="SUFHeaderparty" mixin="SoulPartyFrameMixin" inherits="PingTopLevelPassThroughAttributeTemplate, ResizeLayoutFrame, SecureGroupHeaderTemplate" frameStrata="LOW" parent="UIParent" toplevel="true">
 		<Attributes>
 			<Attribute name="template" type="string" value="SoulPartyMemberFrameTemplate"/>
 			<Attribute name="showParty" type="boolean" value="true"/>

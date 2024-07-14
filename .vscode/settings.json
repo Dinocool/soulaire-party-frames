@@ -199,6 +199,7 @@
         "toString",
         "ZONE",
         "CHANNEL",
-        "SecureGroupHeader_Update"
+        "SecureGroupHeader_Update",
+        "SecureButton_GetUnit"
     ]
 }
