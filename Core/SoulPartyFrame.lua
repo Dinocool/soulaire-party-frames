@@ -75,9 +75,10 @@ function SoulPartyFrameMixin:OnShow()
 end
 
 function SoulPartyFrameMixin:CheckIfParty()
-	local _, type = GetInstanceInfo()
-	if (type ~= "party") then
+	if (GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE) > 5) then
 		self:Hide()
+	else
+		self:Show()
 	end
 end
 
