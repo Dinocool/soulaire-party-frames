@@ -25,6 +25,7 @@ function SPF:OnInitialize()
     -- Register Database
     self.db = LibStub("AceDB-3.0"):New("SoulaireFramesDB", defaults, true)
 
+    SPF_PROFILE = self.db
     -- Assign DB to a global variable
     SPF_DB = self.db.profile;
 

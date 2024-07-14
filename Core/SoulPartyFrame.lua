@@ -2,6 +2,7 @@ SoulPartyFrameMixin = {}
 
 function SoulPartyFrameMixin:OnLoad()
 	self:RegisterEvent("GROUP_ROSTER_UPDATE")
+	self:RegisterEvent("INSTANCE_GROUP_SIZE_CHANGED")
 	self:RegisterEvent("PLAYER_TALENT_UPDATE")
     self:RegisterForDrag("LeftButton")
     self:EnableMouse(true)
@@ -50,6 +51,8 @@ end
 
 function SoulPartyFrameMixin:OnShow()
 
+	self:CheckIfParty()
+
 	--Load settings from profile
 	self:LoadSettings()
 	self:InitializePartyMemberFrames()
@@ -70,11 +73,21 @@ function SoulPartyFrameMixin:OnShow()
 		self.DamagePrediction:Initialize()
 	end
 end
+
+function SoulPartyFrameMixin:CheckIfParty()
+	local _, type = GetInstanceInfo()
+	if (type ~= "party") then
+		self:Hide()
+	end
+end
+
 function SoulPartyFrameMixin:OnEvent(event, ...)
 	if event == "PLAYER_TALENT_UPDATE" then
 		self.dispels = SOUL_GetClassDispels("player")
 	elseif event == "GROUP_ROSTER_UPDATE" then
 		self:InitializePartyMemberFrames()
+	elseif event == "INSTANCE_GROUP_SIZE_CHANGED" then
+		self:CheckIfParty()
 	end
 end
 
@@ -116,12 +129,6 @@ function SoulPartyFrameMixin:GetLayout()
 		return self.VerticalLayout
 	else
 		return self.HorizontalLayout
-	end
-end
-
-function SoulPartyFrameMixin:HidePartyFrames()
-	for memberFrame in self.PartyMemberFramePool:EnumerateActive() do
-		memberFrame:Hide()
 	end
 end
 

@@ -19,9 +19,9 @@ function SoulPartyMemberFrameMixin:ToPlayerArt()
 
     --Role
     local role = UnitGroupRolesAssigned(self:GetUnit())
-    local showPowerBar = false or role=="HEALER"
+    local showPowerBar = false or (role=="HEALER" and self.unit ~= "player")
     if SPF_DB then
-        showPowerBar = SPF_DB.show_power_bars or role=="HEALER"
+        showPowerBar = SPF_DB.show_power_bars or (role=="HEALER" and self.unit ~= "player")
     end
 
 	self.Texture:Show()
