@@ -3,7 +3,6 @@ SoulPartyFrameMixin = {}
 function SoulPartyFrameMixin:OnLoad()
 	_G["SoulPartyFrame"] = self
 	self:RegisterEvent("GROUP_ROSTER_UPDATE")
-	self:RegisterEvent("INSTANCE_GROUP_SIZE_CHANGED")
 	self:RegisterEvent("PLAYER_TALENT_UPDATE")
     self:RegisterForDrag("LeftButton")
     self:EnableMouse(true)
@@ -76,10 +75,14 @@ function SoulPartyFrameMixin:OnShow()
 end
 
 function SoulPartyFrameMixin:CheckIfParty()
-	if (GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE) > 5) then
+	local count = GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE)
+	if (count > 5 or count <=1) then
 		self:Hide()
 	else
-		self:Show()
+		if not self:IsVisible() then
+			self:Show()
+			self:SetAttribute("forceUpdate",time())
+		end
 	end
 end
 
@@ -88,7 +91,6 @@ function SoulPartyFrameMixin:OnEvent(event, ...)
 		self.dispels = SOUL_GetClassDispels("player")
 	elseif event == "GROUP_ROSTER_UPDATE" then
 		self:InitializePartyMemberFrames()
-	elseif event == "INSTANCE_GROUP_SIZE_CHANGED" then
 		self:CheckIfParty()
 	end
 end
@@ -114,8 +116,7 @@ function SoulPartyFrameMixin:UpdateLayout()
 		if not memberFrame then return end
 		memberFrame:UpdateAuraAnchors()
 	end
-	--SECURE
-	SecureGroupHeader_Update(self)
+	self:SetAttribute("forceUpdate",time())
 end
 
 function SoulPartyFrameMixin:UpdateMemberFrames()

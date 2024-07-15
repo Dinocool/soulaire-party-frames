@@ -154,7 +154,7 @@ function SoulPartyMemberFrameMixin:UpdateManaBarTextAnchors()
 end
 
 function SoulPartyMemberFrameMixin:OnAttributeChanged(attribute, value)
-	if attribute == "unit" and self.unit ~= value then
+	if attribute == "unit" and self.unit ~= value and value ~= nil then
 		self:OnUnitChanged()
 		self:UpdateAssignedRoles()
 	end
@@ -170,6 +170,8 @@ function SoulPartyMemberFrameMixin:OnShow()
 end
 
 function SoulPartyMemberFrameMixin:Setup()
+	local length = string.len(self:GetName());
+	self.layoutIndex = tonumber(string.sub(self:GetName(),length,length))
     self.soulaireFrame = true
 	self.unit = self:GetAttribute("unit")
 
@@ -777,10 +779,10 @@ function SoulPartyMemberFrameMixin:SetAura(aura, auraType, auraIndex)
 
     if aura then
 		auraButton:EnableMouse(true)
-        auraButton:SetScript("OnEnter",function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetUnitBuffByAuraInstanceID(self.unit, aura.auraInstanceID, auraType == "Buff" and "HELPFUL" or "HARMFUL")
-        end)
+		auraButton:SetScript("OnEnter",function(self)
+			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+			GameTooltip:SetUnitBuffByAuraInstanceID(self:GetAttribute("unit"), aura.auraInstanceID, auraType == "Buff" and "HELPFUL" or "HARMFUL")
+		end)
 
 		local counttext = ""
         if aura.applications > 1 then
