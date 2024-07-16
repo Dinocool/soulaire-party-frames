@@ -50,9 +50,6 @@ function SoulPartyFrame_UpdateSettingFramePoint()
 end
 
 function SoulPartyFrameMixin:OnShow()
-
-	self:CheckIfParty()
-
 	--Load settings from profile
 	self:LoadSettings()
 	self:InitializePartyMemberFrames()
@@ -75,13 +72,22 @@ function SoulPartyFrameMixin:OnShow()
 end
 
 function SoulPartyFrameMixin:CheckIfParty()
-	local count = GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE)
+
+	local count = GetNumGroupMembers()
+	if count == 0 then
+		count = GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE)-1;
+	end
+	print(count)
 	if (count > 5 or count <=1) then
-		self:Hide()
+		if not InCombatLockdown() then
+			self:Hide()
+		end
 	else
 		if not self:IsVisible() then
-			self:Show()
-			self:SetAttribute("forceUpdate",time())
+			if not InCombatLockdown() then
+				self:Show()
+				self:SetAttribute("forceUpdate",time())
+			end
 		end
 	end
 end
@@ -93,10 +99,6 @@ function SoulPartyFrameMixin:OnEvent(event, ...)
 		self:InitializePartyMemberFrames()
 		self:CheckIfParty()
 	end
-end
-
-function SoulPartyFrameMixin:ShouldShow()
-	return ShouldShowPartyFrames()
 end
 
 function SoulPartyFrameMixin:LoadSettings()
