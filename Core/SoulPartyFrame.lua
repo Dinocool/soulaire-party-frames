@@ -7,7 +7,7 @@ function SoulPartyFrameMixin:OnLoad()
     self:RegisterForDrag("LeftButton")
     self:EnableMouse(true)
     self:SetScript("OnDragStart", self.StartMoving)
-	self:SetScript("OnEvent", self.OnEvent)
+	--self:SetScript("OnEvent", self.OnEvent)
 	self:SetScript("OnDragStop", function()
 		self:StopDrag()
 	end)
@@ -77,7 +77,6 @@ function SoulPartyFrameMixin:CheckIfParty()
 	if count == 0 then
 		count = GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE)-1;
 	end
-	print(count)
 	if (count > 5 or count <=1) then
 		if not InCombatLockdown() then
 			self:Hide()
