@@ -243,7 +243,6 @@ function SoulPartyMemberFrameMixin:RegisterEvents()
 	self:RegisterEvent("INCOMING_SUMMON_CHANGED")
 	self:RegisterUnitEvent("UNIT_NAME_UPDATE",self.unit)
 	self:RegisterUnitEvent("UNIT_AURA", self.unit, self.petUnitToken)
-	self:RegisterUnitEvent("UNIT_PET",  self.unit, self.petUnitToken)
 end
 
 function SoulPartyMemberFrameMixin:UpdateVoiceActivityNotification()
@@ -441,14 +440,14 @@ function SoulPartyMemberFrameMixin:UpdateNotPresentIcon()
 			self.NotPresentIcon.texture:SetTexCoord(0, 1, 0, 1)
 			self.NotPresentIcon.tooltip = INCOMING_SUMMON_TOOLTIP_SUMMON_ACCEPTED
 			self.NotPresentIcon:Show()
-			self.NotPresentIcon.Status.SetAtlas("UI-LFG-ReadyMark-Raid")
+			self.NotPresentIcon.Status:SetAtlas("UI-LFG-ReadyMark-Raid")
 			self.NotPresentIcon.Status:Show()
 		elseif status == Enum.SummonStatus.Declined then
 			self.NotPresentIcon.texture:SetTexture("3084684")
 			self.NotPresentIcon.texture:SetTexCoord(0, 1, 0, 1)
 			self.NotPresentIcon.tooltip = INCOMING_SUMMON_TOOLTIP_SUMMON_DECLINED
 			self.NotPresentIcon:Show()
-			self.NotPresentIcon.Status.SetAtlas("UI-LFG-DeclineMark-Raid")
+			self.NotPresentIcon.Status:SetAtlas("UI-LFG-DeclineMark-Raid")
 			self.NotPresentIcon.Status:Show()
 		end
 	else
@@ -824,8 +823,108 @@ function SoulPartyMemberFrameMixin:SetAura(aura, auraType, auraIndex)
     end
 end
 
+
+
+local function ArrayRemove(t, fnKeep)
+    local j, n = 1, t:Size();
+
+    for i=1,n do
+        if (fnKeep(t, i, j)) then
+            -- Move i's kept value to j's position, if it's not already there.
+            if (i ~= j) then
+                t[j] = t[i];
+                t[i] = nil;
+            end
+            j = j + 1; -- Increment position of where we'll place the next kept value.
+        else
+            t[i] = nil;
+        end
+    end
+
+    return t;
+end
+
+-- Buffs that we don't really need to see
+local Blacklist = {
+	type = 'Blacklist',
+	spells = {
+		[8326]		= true, -- Ghost
+		[8733]		= true, -- Blessing of Blackfathom
+		[15007]		= true, -- Ress Sickness
+		[23445]		= true, -- Evil Twin
+		[24755]		= true, -- Tricked or Treated
+		[25163]		= true, -- Oozeling's Disgusting Aura
+		--[25771]		= true, -- Forbearance
+		[26013]		= true, -- Deserter
+		[36032]		= true, -- Arcane Charge
+		[36893]		= true, -- Transporter Malfunction
+		[36900]		= true, -- Soul Split: Evil!
+		[36901]		= true, -- Soul Split: Good
+		[41425]		= true, -- Hypothermia
+		[49822]		= true, -- Bloated
+		[55711]		= true, -- Weakened Heart
+		[57723]		= true, -- Exhaustion (heroism debuff)
+		[57724]		= true, -- Sated (lust debuff)
+		[58539]		= true, -- Watcher's Corpse
+		[71041]		= true, -- Dungeon Deserter
+		[80354]		= true, -- Temporal Displacement (timewarp debuff)
+		[89140]		= true, -- Demonic Rebirth: Cooldown
+		[95809]		= true, -- Insanity debuff (hunter pet heroism: ancient hysteria)
+		[96041]		= true, -- Stink Bombed
+		[97821]		= true, -- Void-Touched
+		[113942]	= true, -- Demonic: Gateway
+		[117870]	= true, -- Touch of The Titans
+		[123981]	= true, -- Perdition
+		[124273]	= true, -- Stagger
+		[124274]	= true, -- Stagger
+		[124275]	= true, -- Stagger
+		[195776]	= true, -- Moonfeather Fever
+		[196342]	= true, -- Zanzil's Embrace
+		[206150]	= true, -- Challenger's Burden SL
+		[206151]	= true, -- Challenger's Burden BfA
+		[206662]	= true, -- Experience Eliminated (in range)
+		[234143]	= true, -- Temptation (Upper Karazhan Ring Debuff)
+		[287825]	= true, -- Lethargy debuff (fight or flight)
+		[306600]	= true, -- Experience Eliminated (oor - 5m)
+		[313015]	= true, -- Recently Failed (Mechagnome racial)
+		[322695]	= true, -- Drained
+		[328891]	= true, -- A Gilded Perspective
+		[348443]	= true, -- Experience Eliminated
+		[374037]	= true, -- Overwhelming Rage
+		[383600]	= true, -- Surrounding Storm (Strunraan)
+		[390106]	= true, -- Riding Along
+		[390435]	= true, -- Exhaustion (Evoker lust debuff)
+		[392960]	= true, -- Waygate Travel
+		[392992]	= true, -- Silent Lava
+		[393798]	= true, -- Activated Defense Systems
+		[418990]	= true, -- Wicker Men's Curse
+	},
+}
+
+
+function SoulPartyMemberFrameMixin:BuffFilter(v)
+	return Blacklist.spells[v.spellId] == nil
+end
+
+function SoulPartyMemberFrameMixin:FilterAuras(buffsChanged, debuffsChanged)
+	if self.buffs then
+		self.buffs = ArrayRemove(self.buffs, function(t,i,j)
+			local v = t[i]
+			return self:BuffFilter(v);
+		end)
+	end
+
+	if self.debuffs then
+		self.debuffs = ArrayRemove(self.debuffs, function(t,i,j)
+			local v = t[i]
+			return self:BuffFilter(v);
+		end)
+	end
+end
+
 function SoulPartyMemberFrameMixin:AurasUpdate(buffsChanged, debuffsChanged)
     self.Flash:Hide()
+	self:FilterAuras(buffsChanged,debuffsChanged)
     -- sort buffs by duration and add them from the shortest to the longest
     if buffsChanged and self.buffs then
         for auraIndex = 1, 10 do

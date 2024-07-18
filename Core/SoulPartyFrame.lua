@@ -2,12 +2,10 @@ SoulPartyFrameMixin = {}
 
 function SoulPartyFrameMixin:OnLoad()
 	_G["SoulPartyFrame"] = self
-	self:RegisterEvent("GROUP_ROSTER_UPDATE")
 	self:RegisterEvent("PLAYER_TALENT_UPDATE")
     self:RegisterForDrag("LeftButton")
     self:EnableMouse(true)
     self:SetScript("OnDragStart", self.StartMoving)
-	--self:SetScript("OnEvent", self.OnEvent)
 	self:SetScript("OnDragStop", function()
 		self:StopDrag()
 	end)
