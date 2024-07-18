@@ -155,6 +155,7 @@ end
 
 function SoulPartyMemberFrameMixin:OnAttributeChanged(attribute, value)
 	if attribute == "unit" and self.unit ~= value and value ~= nil then
+		self.unit = value
 		self:OnUnitChanged()
 		self:UpdateAssignedRoles()
 	end
@@ -173,7 +174,6 @@ function SoulPartyMemberFrameMixin:Setup()
 	local length = string.len(self:GetName());
 	self.layoutIndex = tonumber(string.sub(self:GetName(),length,length))
     self.soulaireFrame = true
-	self.unit = self:GetAttribute("unit")
 
 	self.debuffCountdown = 0
 	self.numDebuffs = 0
@@ -608,7 +608,7 @@ function SoulPartyMemberFrameMixin:UpdateAuras(unitAuraUpdateInfo)
 	local buffsChanged = false;
 
 	if unitAuraUpdateInfo == nil or unitAuraUpdateInfo.isFullUpdate or self.debuffs == nil then
-		self:ParseAllAuras(false, false, false, false);
+		self:ParseAllAuras();
 		debuffsChanged = true;
 		buffsChanged = true;
 	else
@@ -664,7 +664,7 @@ function SoulPartyMemberFrameMixin:UpdateAuras(unitAuraUpdateInfo)
 	end
 end
 
-function SoulPartyMemberFrameMixin:ParseAllAuras() 
+function SoulPartyMemberFrameMixin:ParseAllAuras()
 	if self.debuffs == nil then
 		self.debuffs = TableUtil.CreatePriorityTable(AuraUtil.UnitFrameDebuffComparator, TableUtil.Constants.AssociativePriorityTable);
 		self.buffs = TableUtil.CreatePriorityTable(AuraUtil.DefaultAuraCompare, TableUtil.Constants.AssociativePriorityTable);
@@ -692,6 +692,9 @@ function SoulPartyMemberFrameMixin:CreateAura(auraIndex, auraType)
 	if not self.auras then self.auras={} end
 
     local auraButtonName = auraType..auraIndex
+
+	if self.auras[auraButtonName] then return end;
+
     local aura = CreateFrame("Button", auraButtonName, self)
 	self.auras[auraButtonName] = aura
     aura:SetFrameLevel(7)
@@ -805,7 +808,7 @@ function SoulPartyMemberFrameMixin:SetAura(aura, auraType, auraIndex)
                 aura.dispelName=""
             end
             borderColor = DebuffTypeColor[aura.dispelName]
-            if auraIndex == 1 and SoulPartyFrame.dispels and SoulPartyFrame.dispels[string.lower(aura.dispelName)] and next(SoulPartyFrame.dispels[string.lower(aura.dispelName)]) ~= nil then
+            if not self.Flash:IsVisible() and SoulPartyFrame.dispels and SoulPartyFrame.dispels[string.lower(aura.dispelName)] and next(SoulPartyFrame.dispels[string.lower(aura.dispelName)]) ~= nil then
                 self.Flash:Show()
                 self.Flash:SetVertexColor(borderColor.r, borderColor.g, borderColor.b)
             end
@@ -906,35 +909,34 @@ function SoulPartyMemberFrameMixin:BuffFilter(v)
 	return Blacklist.spells[v.spellId] == nil
 end
 
-function SoulPartyMemberFrameMixin:FilterAuras(buffsChanged, debuffsChanged)
-	if self.buffs then
-		self.buffs = ArrayRemove(self.buffs, function(t,i,j)
-			local v = t[i]
-			return self:BuffFilter(v);
-		end)
-	end
-
-	if self.debuffs then
-		self.debuffs = ArrayRemove(self.debuffs, function(t,i,j)
-			local v = t[i]
-			return self:BuffFilter(v);
-		end)
-	end
-end
-
 function SoulPartyMemberFrameMixin:AurasUpdate(buffsChanged, debuffsChanged)
     self.Flash:Hide()
-	self:FilterAuras(buffsChanged,debuffsChanged)
     -- sort buffs by duration and add them from the shortest to the longest
     if buffsChanged and self.buffs then
-        for auraIndex = 1, 10 do
-            self:SetAura(self.buffs[auraIndex], "Buff", auraIndex)
-        end
+		local count = 1;
+		self.buffs:Iterate(function(auraInstanceID, aura)
+			if count > 10 then return end
+			if aura.icon and self:BuffFilter(aura) then
+            	self:SetAura(self.buffs[auraInstanceID], "Buff", count)
+				count=count+1
+			end
+        end)
+		for index = count,10 do
+			self:SetAura(nil, "Buff", index)
+		end
     end
     if debuffsChanged and self.debuffs then
-        for auraIndex = 1, 10 do
-            self:SetAura(self.debuffs[auraIndex], "Debuff", auraIndex)
-        end
+		local count = 1;
+		self.debuffs:Iterate(function(auraInstanceID, aura)
+			if count > 10 then return end
+			if aura.icon and self:BuffFilter(aura) then
+            	self:SetAura(self.debuffs[auraInstanceID], "Debuff", count)
+				count=count+1
+			end
+        end)
+		for index = count,10 do
+			self:SetAura(nil, "Debuff", index)
+		end
     end
 end
 
