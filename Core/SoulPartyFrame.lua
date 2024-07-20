@@ -92,6 +92,7 @@ end
 function SoulPartyFrameMixin:OnEvent(event, ...)
 	if event == "PLAYER_TALENT_UPDATE" then
 		self.dispels = SOUL_GetClassDispels("player")
+		SPF:ChangeRole()
 	elseif event == "GROUP_ROSTER_UPDATE" then
 		self:InitializePartyMemberFrames()
 		self:CheckIfParty()
@@ -99,23 +100,37 @@ function SoulPartyFrameMixin:OnEvent(event, ...)
 end
 
 function SoulPartyFrameMixin:LoadSettings()
-	if SPF_DB.party_layout == "VERTICAL" then
-		self:SetAttribute("point","LEFT")
-	else
-		self:SetAttribute("point","TOP")
-	end
+	
 
-	self:SetAttribute("showPlayer",SPF_DB.show_player_frame)
+	self:SetAttributeNoHandler("showPlayer",SPF_DB.show_player_frame)
+
+	if SPF_DB.party_layout == "HORIZONTAL" then
+		self:SetAttributeNoHandler("point","LEFT")
+		for i = 1, (MAX_PARTY_MEMBERS + 1) do
+			local memberFrame = self[i]
+			if not memberFrame then return end
+			memberFrame:ClearPoint("TOP")
+		end
+	else
+		self:SetAttributeNoHandler("point","TOP")
+		for i = 1, (MAX_PARTY_MEMBERS + 1) do
+			local memberFrame = self[i]
+			if not memberFrame then return end
+			memberFrame:ClearPoint("LEFT")
+		end
+	end
 end
 
 function SoulPartyFrameMixin:UpdateLayout()
 	self:LoadSettings()
+	
+	self:SetAttribute("forceUpdate",time())
+
 	for i = 1, (MAX_PARTY_MEMBERS + 1) do
 		local memberFrame = self[i]
 		if not memberFrame then return end
 		memberFrame:UpdateAuraAnchors()
 	end
-	self:SetAttribute("forceUpdate",time())
 end
 
 function SoulPartyFrameMixin:UpdateMemberFrames()
@@ -138,11 +153,11 @@ function SoulPartyFrame_Unlock()
 	SoulPartyFrame:SetMovable(true)
     SoulPartyFrame:EnableMouse(true)
 	SoulPartyFrame.Background:Show();
-	for i=1, MAX_PARTY_MEMBERS do
-		local PartyMemberFrame = SoulPartyFrame["MemberFrame" .. i]
-		if PartyMemberFrame then
-			PartyMemberFrame:EnableMouse(false)
-		end
+
+	for i = 1, (MAX_PARTY_MEMBERS + 1) do
+		local memberFrame = SoulPartyFrame[i]
+		if not memberFrame then return end
+		memberFrame:EnableMouse(false)
 	end
 end
 
@@ -150,11 +165,10 @@ function SoulPartyFrame_Lock()
 	SoulPartyFrame:SetMovable(false)
     SoulPartyFrame:EnableMouse(false)
 	SoulPartyFrame.Background:Hide();
-	for i=1, MAX_PARTY_MEMBERS do
-		local PartyMemberFrame = SoulPartyFrame["MemberFrame" .. i]
-		if PartyMemberFrame then
-			PartyMemberFrame:EnableMouse(true)
-		end
+	for i = 1, (MAX_PARTY_MEMBERS + 1) do
+		local memberFrame = SoulPartyFrame[i]
+		if not memberFrame then return end
+		memberFrame:EnableMouse(true)
 	end
 end
 
@@ -175,9 +189,9 @@ function SoulPartyFrameMixin:InitializePartyMemberFrames()
 		_G["SUFHeaderparty"..i] = memberFrame
 
 		memberFrame:RegisterForClicks("AnyUp")
-		memberFrame:SetAttribute("*type1", "target") -- Target unit on left click
-		memberFrame:SetAttribute("*type2", "togglemenu") -- Toggle units menu on left click
-		memberFrame:SetAttribute("*type3", "assist") -- On middle click, target the target of the clicked unit
+		memberFrame:SetAttributeNoHandler("*type1", "target") -- Target unit on left click
+		memberFrame:SetAttributeNoHandler("*type2", "togglemenu") -- Toggle units menu on left click
+		memberFrame:SetAttributeNoHandler("*type3", "assist") -- On middle click, target the target of the clicked unit
 		memberFrame.configured=true
 
 		--memberFrame:SetPoint("TOPLEFT")

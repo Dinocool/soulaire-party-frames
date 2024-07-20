@@ -171,6 +171,7 @@ function SoulPartyMemberFrameMixin:OnShow()
 end
 
 function SoulPartyMemberFrameMixin:Setup()
+	
 	local length = string.len(self:GetName());
 	self.layoutIndex = tonumber(string.sub(self:GetName(),length,length))
     self.soulaireFrame = true
@@ -701,8 +702,7 @@ function SoulPartyMemberFrameMixin:CreateAura(auraIndex, auraType)
     aura:SetWidth(24)
     aura:SetHeight(24)
     aura:SetID(auraIndex)
-    aura:SetAttribute("unit", self.unit)
-    RegisterUnitWatch(aura)
+    aura:SetAttributeNoHandler("unit", self.unit)
 
     aura.Icon = aura:CreateTexture(auraButtonName.."Icon", "BACKGROUND")
     aura.Icon:SetAllPoints(aura)
@@ -941,7 +941,7 @@ function SoulPartyMemberFrameMixin:AurasUpdate(buffsChanged, debuffsChanged)
 end
 
 function SoulPartyMemberFrameMixin:GetAuraAnchor(debuff)
-	if SPF_DB.party_layout == "VERTICAL"  then
+	if SPF_DB.party_layout == "HORIZONTAL"  then
 		if debuff then
 			return "TOPLEFT", 48, 39
 		else

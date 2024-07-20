@@ -44,7 +44,7 @@ function SPF_Config:OnEnable()
                         desc = 'the way the frames are laid out (Requires reload)',
                         set = function(_, val)
                             SPF_DB.party_layout = val
-                            --SoulPartyFrame:UpdateLayout()
+                            SoulPartyFrame:UpdateLayout()
                         end,
                         get = function()
                             return SPF_DB.party_layout
