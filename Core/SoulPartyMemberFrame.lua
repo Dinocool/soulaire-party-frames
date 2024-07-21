@@ -166,10 +166,6 @@ function SoulPartyMemberFrameMixin:OnUnitChanged()
 	self.PortraitFrame:Update()
 end
 
-function SoulPartyMemberFrameMixin:OnShow()
-	--self:Setup()
-end
-
 function SoulPartyMemberFrameMixin:Setup()
 	
 	local length = string.len(self:GetName());
@@ -217,6 +213,100 @@ function SoulPartyMemberFrameMixin:Setup()
 	SPF:ScheduleRepeatingTimer(self.UpdateDistance,0.2,self)
 
 	self.initialized = true
+end
+
+local DamageReductionList ={
+	spells={
+
+		--Paladin
+		[642] = {dr = "1.0"},
+		[6940] = {dr="0.2",ignoreSelf=true}, -- Blessing of Sacrifice
+		[31850] = {dr="0.2"}, -- Ardent Defender
+		[498] = {dr="0.2"}, -- Divine Protection
+		[403876] = {dr="0.3"}, -- Divine Protection
+		[86659] = {dr="0.5"}, -- Guardian of Ancient Kings
+		[389539] = {dr="0.02", scalesWithStacks=true}, -- Sentinel
+		[31821] = {dr="0.12"}, -- Aura Mastery
+
+		--Druid
+		[22812] = {dr="0.2"}, -- Barkskin
+		[102342] = {dr="0.2"}, -- Ironbark
+		[61336] = {dr="0.5"}, -- Survival Instincts
+
+		--Warlock
+		[104773] = {dr="0.25"}, -- Unending Resolve
+
+		--Death Knight
+		[48792] = {dr="0.3"}, -- Ice Bound Fortitude
+		[51052] = {dr="0.2"}, -- AMZ
+
+		--Demon Hunter
+		[198589] = {dr="0.2"}, -- Blur
+		
+		--Warrior
+		[386208] = {dr="0.15"}, -- Defensive Stance
+		[23920] = {dr="0.2"}, -- Spell Reflection
+		[118038] = {dr="0.3"}, -- Die By The Sword
+		[114030] = {dr="0.3"}, -- Vigilance
+		
+		--Hunter
+		[264735] = {dr="0.2"}, -- Survival of the Fittest
+		[186265]  = {dr="0.3"}, -- Aspect of the Turtle
+
+		--Shaman
+		[108271] = {dr="0.4"}, --Astral Shift
+
+		--Priest
+		[193063] = {dr="0.1"}, -- Protective Light
+		[47585] = {dr="0.75"}, -- Dispersion
+		[33206] = {dr="0.4"}, -- Pain Supression
+
+		--Rogue
+		[31224] = {dr="1.0"}, -- Cloak of Shadows
+		[1966] = {dr="0.4"}, -- Feint
+
+		--Mage
+		[321686] = {dr="0.2"}, -- Mirror Image
+		
+	}
+}
+
+function SoulPartyMemberFrameMixin:GetAbilityDR(auraInstanceID, aura)
+		--Handle DR's that work on stacks
+		local dr = DamageReductionList.spells[aura.spellId]
+		if not dr then return nil end
+
+		--DR can't apply to self
+		if dr.ignoreSelf and aura.sourceUnit == self.unit then return end
+
+		local mult = 1
+		if dr.scalesWithStacks then
+			mult=aura.applications
+		end
+		return (1.0-(dr.dr*mult))
+end
+
+function SoulPartyMemberFrameMixin:UpdateDamageReduction()
+	local damageTaken = 1.0
+	self.buffs:Iterate(function(auraInstanceID, aura)
+		local dr = self:GetAbilityDR(auraInstanceID,aura)
+		if dr ~= nil then
+			damageTaken = damageTaken*dr;
+		end
+	end)
+	self.otherBuffs:Iterate(function(auraInstanceID, aura)
+		local dr = self:GetAbilityDR(auraInstanceID,aura)
+		if dr ~= nil then
+			damageTaken = damageTaken*dr;
+		end
+	end)
+	if damageTaken ~= 1.0 then
+		self.DamageReduction:Show()
+		self.DamageReduction.CenterText:SetText(tostring((1.0-damageTaken)*100.0).."%");
+	else
+		self.DamageReduction:Hide()
+		self.DamageReduction.CenterText:SetText("");
+	end
 end
 
 -- Registers Events this frame should listen to
@@ -296,6 +386,7 @@ function SoulPartyMemberFrameMixin:UpdateMember()
 	end
 
 	self:UpdateAuras()
+	self:UpdateDamageReduction()
 	self:UpdatePvPStatus()
 	self:UpdateVoiceStatus()
 	self:UpdateReadyCheck()
@@ -607,11 +698,13 @@ end
 function SoulPartyMemberFrameMixin:UpdateAuras(unitAuraUpdateInfo)
 	local debuffsChanged = false;
 	local buffsChanged = false;
+	local otherBuffsChanged = false;
 
 	if unitAuraUpdateInfo == nil or unitAuraUpdateInfo.isFullUpdate or self.debuffs == nil then
 		self:ParseAllAuras();
 		debuffsChanged = true;
 		buffsChanged = true;
+		otherBuffsChanged = true;
 	else
 		if unitAuraUpdateInfo.addedAuras ~= nil then
 			for _, aura in ipairs(unitAuraUpdateInfo.addedAuras) do
@@ -623,6 +716,9 @@ function SoulPartyMemberFrameMixin:UpdateAuras(unitAuraUpdateInfo)
 				elseif type == AuraUtil.AuraUpdateChangedType.Buff then
 					self.buffs[aura.auraInstanceID] = aura;
 					buffsChanged = true;
+				else
+					self.otherBuffs[aura.auraInstanceID] = aura
+					otherBuffsChanged = true;
 				end
 			end
 		end
@@ -644,6 +740,13 @@ function SoulPartyMemberFrameMixin:UpdateAuras(unitAuraUpdateInfo)
 					end
 					self.buffs[auraInstanceID] = newAura;
 					buffsChanged = true;
+				else
+					local newAura = C_UnitAuras.GetAuraDataByAuraInstanceID(self.unit, auraInstanceID);
+					if newAura ~= nil then
+						newAura.isBuff = true;
+					end
+					self.otherBuffs[auraInstanceID] = newAura;
+					otherBuffsChanged = true;
 				end
 			end
 		end
@@ -656,6 +759,9 @@ function SoulPartyMemberFrameMixin:UpdateAuras(unitAuraUpdateInfo)
 				elseif self.buffs[auraInstanceID] ~= nil then
 					self.buffs[auraInstanceID] = nil;
 					buffsChanged = true;
+				elseif self.otherBuffs[auraInstanceID] ~= nil then
+					self.otherBuffs[auraInstanceID] = nil;
+					otherBuffsChanged = true;
 				end
 			end
 		end
@@ -663,15 +769,20 @@ function SoulPartyMemberFrameMixin:UpdateAuras(unitAuraUpdateInfo)
 	if buffsChanged or debuffsChanged then
 		self:AurasUpdate(buffsChanged,debuffsChanged)
 	end
+	if buffsChanged or otherBuffsChanged then
+		self:UpdateDamageReduction()
+	end
 end
 
 function SoulPartyMemberFrameMixin:ParseAllAuras()
 	if self.debuffs == nil then
 		self.debuffs = TableUtil.CreatePriorityTable(AuraUtil.UnitFrameDebuffComparator, TableUtil.Constants.AssociativePriorityTable);
 		self.buffs = TableUtil.CreatePriorityTable(AuraUtil.DefaultAuraCompare, TableUtil.Constants.AssociativePriorityTable);
+		self.otherBuffs = TableUtil.CreatePriorityTable(AuraUtil.DefaultAuraCompare, TableUtil.Constants.AssociativePriorityTable);
 	else
 		self.debuffs:Clear();
 		self.buffs:Clear();
+		self.otherBuffs:Clear();
 	end
 
 	local batchCount = nil;
@@ -682,6 +793,8 @@ function SoulPartyMemberFrameMixin:ParseAllAuras()
 			self.debuffs[aura.auraInstanceID] = aura;
 		elseif type == AuraUtil.AuraUpdateChangedType.Buff then
 			self.buffs[aura.auraInstanceID] = aura;
+		else
+			self.otherBuffs[aura.auraInstanceID] = aura
 		end
 	end
 	AuraUtil.ForEachAura(self.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful), batchCount, HandleAura, usePackedAura);
@@ -826,27 +939,6 @@ function SoulPartyMemberFrameMixin:SetAura(aura, auraType, auraIndex)
     end
 end
 
-
-
-local function ArrayRemove(t, fnKeep)
-    local j, n = 1, t:Size();
-
-    for i=1,n do
-        if (fnKeep(t, i, j)) then
-            -- Move i's kept value to j's position, if it's not already there.
-            if (i ~= j) then
-                t[j] = t[i];
-                t[i] = nil;
-            end
-            j = j + 1; -- Increment position of where we'll place the next kept value.
-        else
-            t[i] = nil;
-        end
-    end
-
-    return t;
-end
-
 -- Buffs that we don't really need to see
 local Blacklist = {
 	type = 'Blacklist',
@@ -964,7 +1056,8 @@ function SoulPartyMemberFrameMixin:UpdateAuraAnchors()
 end
 
 function SoulPartyMemberFrameMixin:SetAuraAnchor(auraIndex, auraType, anchor, x, y)
-    local auraButtonName = auraType..auraIndex
+    if not self.auras then return end
+	local auraButtonName = auraType..auraIndex
     local aura = self.auras[auraButtonName]
 
     aura:ClearAllPoints()
