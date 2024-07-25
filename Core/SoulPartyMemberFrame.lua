@@ -195,17 +195,13 @@ function SoulPartyMemberFrameMixin:Setup()
 	self:UpdateLeader()
 	self:RegisterEvents()
 	
-	local showmenu = function()
-		ToggleDropDownMenu(1, nil, self.DropDown, self, 47, 15)
-	end
-	SecureUnitButton_OnLoad(self, self.unit, showmenu)
+	self:RegisterForClicks("AnyUp")	
+	self:SetAttribute("*type1", "target")
+	self:SetAttribute("*type2", "togglemenu")
 
 	self:UpdateArt()
 	self:SetFrameLevel(2)
 	self:UpdateNotPresentIcon()
-
-	UIDropDownMenu_SetInitializeFunction(self.DropDown, PartyMemberFrameMixin.InitializePartyFrameDropDown)
-	UIDropDownMenu_SetDisplayMode(self.DropDown, "MENU")
 
 	UnitPowerBarAlt_Initialize(self.PowerBarAlt, self.unit, 0.5, "GROUP_ROSTER_UPDATE")
 	
