@@ -50,7 +50,6 @@ end
 function SoulPartyFrameMixin:OnShow()
 	--Load settings from profile
 	self:LoadSettings()
-	self:InitializePartyMemberFrames()
 
 	--Populate what dispells our player knows
 	self.dispels=SOUL_GetClassDispels("player")
@@ -94,7 +93,6 @@ function SoulPartyFrameMixin:OnEvent(event, ...)
 		self.dispels = SOUL_GetClassDispels("player")
 		SPF:ChangeRole()
 	elseif event == "GROUP_ROSTER_UPDATE" then
-		self:InitializePartyMemberFrames()
 		self:CheckIfParty()
 	end
 end
@@ -178,24 +176,6 @@ end
 
 function SoulPartyFrame_IsUnlocked()
 	return SoulPartyFrame:IsMovable()
-end
-
-function SoulPartyFrameMixin:InitializePartyMemberFrames()
-	for i = 1, (MAX_PARTY_MEMBERS + 1) do
-		local memberFrame = self[i]
-		if not memberFrame or memberFrame.configured then return end
-		-- Set for debugging purposes.
-		_G["SoulPartyFrame"..i] = memberFrame
-		_G["SUFHeaderparty"..i] = memberFrame
-
-		memberFrame:RegisterForClicks("AnyUp")
-		memberFrame:SetAttributeNoHandler("*type1", "target") -- Target unit on left click
-		memberFrame:SetAttributeNoHandler("*type2", "togglemenu") -- Toggle units menu on left click
-		memberFrame:SetAttributeNoHandler("*type3", "assist") -- On middle click, target the target of the clicked unit
-		memberFrame.configured=true
-
-		--memberFrame:SetPoint("TOPLEFT")
-	end
 end
 
 function SOUL_GetClassDispels(unit)

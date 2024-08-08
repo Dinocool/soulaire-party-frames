@@ -170,6 +170,11 @@ function SoulPartyMemberFrameMixin:Setup()
 	
 	local length = string.len(self:GetName());
 	self.layoutIndex = tonumber(string.sub(self:GetName(),length,length))
+	
+	-- Set for debugging purposes.
+	_G["SoulPartyFrame"..self.layoutIndex] = self
+	-- Set so weakauras can hook in
+	_G["SUFHeaderparty"..self.layoutIndex] = self
     self.soulaireFrame = true
 
 	self.debuffCountdown = 0
