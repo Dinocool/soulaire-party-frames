@@ -1,0 +1,46 @@
+{
+    "Lua.runtime.version": "Lua 5.1",
+    "Lua.runtime.builtin": {
+        "basic": "disable",
+        "debug": "disable",
+        "io": "disable",
+        "math": "disable",
+        "os": "disable",
+        "package": "disable",
+        "string": "disable",
+        "table": "disable",
+        "utf8": "disable"
+    },
+    "Lua.workspace.library": [
+        "c:\\Users\\user\\.vscode\\extensions\\ketho.wow-api-0.15.5\\Annotations"
+    ],
+    "Lua.diagnostics.globals": [
+        "MAX_PARTY_MEMBERS",
+        "LE_PARTY_CATEGORY_INSTANCE",
+        "UnregisterUnitWatch",
+        "PartyFrame",
+        "CompactPartyFrame",
+        "AbbreviateLargeNumbers",
+        "UnitPowerBarAlt_Initialize",
+        "UnitFrame_OnEnter",
+        "UnitFrame_OnLeave",
+        "TextureKitConstants",
+        "PARTY_IN_PUBLIC_GROUP_MESSAGE",
+        "SetDesaturation",
+        "CooldownFrame_Set",
+        "CooldownFrame_Clear",
+        "EditModeManagerFrame",
+        "VoiceActivityManager",
+        "ReadyCheck_Confirm",
+        "ReadyCheck_Start",
+        "INCOMING_SUMMON_TOOLTIP_SUMMON_PENDING",
+        "INCOMING_SUMMON_TOOLTIP_SUMMON_ACCEPTED",
+        "INCOMING_SUMMON_TOOLTIP_SUMMON_DECLINED",
+        "ReadyCheck_Finish",
+        "TableUtil",
+        "DebuffTypeColor",
+        "PartyMemberFrameMixin",
+        "PartyUtil",
+        "LFG_FOLLOWER_NAME_PREFIX"
+    ]
+}

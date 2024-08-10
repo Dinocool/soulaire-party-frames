@@ -22,7 +22,7 @@ function SPF_Config:OnEnable()
                         desc = 'Unlock the Party Frame to move it',
                         hidden = SoulPartyFrame_IsUnlocked,
                         func = function()
-                            SoulPartyFrame_Unlock()
+                            SoulPartyFrame:Unlock()
                         end
                     },
                     party_lock = {
@@ -32,7 +32,7 @@ function SPF_Config:OnEnable()
                         desc = 'Lock the Party Frame',
                         hidden = SoulPartyFrame_IsLocked,
                         func = function()
-                            SoulPartyFrame_Lock()
+                            SoulPartyFrame:Lock()
                         end
                     },
                     party_layout = {

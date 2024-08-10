@@ -153,12 +153,30 @@ function SoulPartyMemberFrameMixin:UpdateManaBarTextAnchors()
 	end
 end
 
-function SoulPartyMemberFrameMixin:OnAttributeChanged(attribute, value)
-	if attribute == "unit" and self.unit ~= value and value ~= nil then
-		self.unit = value
-		self:OnUnitChanged()
-		self:UpdateAssignedRoles()
-	end
+function SoulPartyMemberFrameMixin:Initialize()
+	-- Hook into parents methods
+	local parent = self:GetParent()
+
+	parent:HookScript("OnAttributeChanged",function(frame,attribute,value)
+			if attribute == "unit" and self.unit ~= value and value ~= nil then
+				self.unit = value
+				self:OnUnitChanged()
+				self:UpdateAssignedRoles()
+			end
+		end)
+	self:SetScript("OnEvent",self.OnEvent)
+	parent:HookScript("OnEnter",function(frame) UnitFrame_OnEnter(self) end)
+	parent:HookScript("OnLeave",function(frame) UnitFrame_OnLeave(self) end)
+	
+	local length = string.len(parent:GetName());
+	self.layoutIndex = tonumber(string.sub(parent:GetName(),length,length))
+
+	-- Set for debugging purposes.
+	_G["SoulPartyFrame"..self.layoutIndex] = self
+	-- Set so weakauras can hook in
+	_G["SUFHeaderparty"..self.layoutIndex] = self
+
+	self.unit = parent.unit
 end
 
 function SoulPartyMemberFrameMixin:OnUnitChanged()
@@ -167,14 +185,6 @@ function SoulPartyMemberFrameMixin:OnUnitChanged()
 end
 
 function SoulPartyMemberFrameMixin:Setup()
-	
-	local length = string.len(self:GetName());
-	self.layoutIndex = tonumber(string.sub(self:GetName(),length,length))
-	
-	-- Set for debugging purposes.
-	_G["SoulPartyFrame"..self.layoutIndex] = self
-	-- Set so weakauras can hook in
-	_G["SUFHeaderparty"..self.layoutIndex] = self
     self.soulaireFrame = true
 
 	self.debuffCountdown = 0
@@ -199,10 +209,6 @@ function SoulPartyMemberFrameMixin:Setup()
 	self:UpdateMember()
 	self:UpdateLeader()
 	self:RegisterEvents()
-	
-	self:RegisterForClicks("AnyUp")	
-	self:SetAttribute("*type1", "target")
-	self:SetAttribute("*type2", "togglemenu")
 
 	self:UpdateArt()
 	self:SetFrameLevel(2)
@@ -821,9 +827,9 @@ function SoulPartyMemberFrameMixin:CreateAura(auraIndex, auraType)
     aura.Icon = aura:CreateTexture(auraButtonName.."Icon", "BACKGROUND")
     aura.Icon:SetAllPoints(aura)
 	aura.IconMask = aura:CreateMaskTexture()
-	aura.IconMask:SetPoint("TOPLEFT",0,0)
-	aura.IconMask:SetPoint("BOTTOMRIGHT",22,-22)
-	aura.IconMask:SetTexture("interface/common/commoniconmask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+	aura.IconMask:SetPoint("TOPLEFT",aura,"TOPLEFT",-2,2)
+	aura.IconMask:SetPoint("BOTTOMRIGHT",aura,"BOTTOMRIGHT",2,-2)
+	aura.IconMask:SetTexture("interface/framegeneral/uiframeiconmask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
 	--aura.Icon:AddMaskTexture(aura.IconMask)
     aura.Cooldown = CreateFrame("Cooldown", auraButtonName.."Cooldown", aura, "CooldownFrameTemplate")
     aura.Cooldown:SetFrameLevel(8)
@@ -855,15 +861,13 @@ function SoulPartyMemberFrameMixin:CreateAura(auraIndex, auraType)
     aura.Border:SetPoint("TOPLEFT", aura, "TOPLEFT", -1, 1)
 
 	aura.SheenFrame = CreateFrame("Frame","SheenFrame",aura)
-	aura.SheenFrame:SetWidth(64)
-    aura.SheenFrame:SetHeight(32)
-	aura.SheenFrame:SetPoint("TOPLEFT")
+	aura.SheenFrame:SetAllPoints(aura)
 	aura.Sheen = aura.SheenFrame:CreateTexture("AuraSheen","OVERLAY")
-	aura.Sheen:SetPoint("TOPLEFT",-32,23)
+	aura.Sheen:SetPoint("TOPLEFT",aura,"TOPLEFT",-32,2)
 	aura.Sheen:SetAtlas("loottoast-sheen")
 	aura.Sheen:SetBlendMode("ADD")
 	aura.Sheen:SetWidth(64)
-    aura.Sheen:SetHeight(64)
+    aura.Sheen:SetHeight(28)
 	aura.Sheen:AddMaskTexture(aura.IconMask)
 	aura.Sheen:Hide()
 	self:AddSwipeAnimation(aura.Sheen)

@@ -2,21 +2,63 @@ SoulPartyFrameMixin = {}
 
 function SoulPartyFrameMixin:OnLoad()
 	_G["SoulPartyFrame"] = self
+	self:RegisterEvent("GROUP_ROSTER_UPDATE")
 	self:RegisterEvent("PLAYER_TALENT_UPDATE")
-    self:RegisterForDrag("LeftButton")
-    self:EnableMouse(true)
-    self:SetScript("OnDragStart", self.StartMoving)
-	self:SetScript("OnDragStop", function()
-		self:StopDrag()
-	end)
+end
 
-    SoulPartyFrame_Lock()
+
+
+local function InitializeUnit(header, frameName)
+	local frame = _G[frameName]
+
+	frame:RegisterForClicks("AnyUp")
+	if not frame.unitFrame then
+		frame.unitFrame= CreateFrame("Frame", nil, frame, "SoulPartyMemberFrameTemplate")
+	end
+	frame.unitFrame:SetAllPoints(frame)
+	frame.unitFrame:Initialize()
+end
+
+function SoulPartyFrameMixin:CreateHeader()
+
+	local type = "party"
+	local headerFrame = CreateFrame("Frame", "SUFHeader" .. type, nil, "PingTopLevelPassThroughAttributeTemplate, ResizeLayoutFrame, SecureGroupHeaderTemplate")
+	
+	headerFrame:SetAttribute("template","SecureUnitButtonTemplate")
+	headerFrame:SetAttribute("showParty",true)
+	headerFrame:SetAttribute("showRaid",false)
+	headerFrame:SetAttribute("showSolo",false)
+	headerFrame:SetAttribute("groupBy","ROLE")
+	headerFrame:SetAttribute("groupingOrder","1,2,3,4,5,6,7,8")
+	headerFrame:SetClampedToScreen(true)
+	headerFrame.initialConfigFunction = InitializeUnit
+
+	local secureInitializeUnit = [[
+	local header = self:GetParent()
+
+	self:SetAttribute("*type1", "target")
+	self:SetAttribute("*type2", "togglemenu")
+	self:SetAttribute("type2", "togglemenu")
+
+	self:SetWidth("232")
+	self:SetHeight("100")
+
+	header:CallMethod("initialConfigFunction", self:GetName())
+]]
+
+	headerFrame:SetAttribute("initialConfigFunction",secureInitializeUnit)
+	--headerFrame:ClearAllPoints()
+	--headerFrame:SetPoint("TOPLEFT",self,"TOPLEFT")
+	headerFrame:Show()
+	self.headerFrame = headerFrame
+
+	DevTool:AddData(headerFrame)
 end
 
 function SoulPartyFrameMixin:StopDrag()
-	self:StopMovingOrSizing()
+	self.headerFrame:StopMovingOrSizing()
 	if SPF_DB then
-		local point, _, relativePoint, x, y = self:GetPoint()
+		local point, _, relativePoint, x, y = self.headerFrame:GetPoint()
 		SPF_DB.party_point = point
 		SPF_DB.party_relative_point = relativePoint
 		SPF_DB.party_position_x = x
@@ -25,29 +67,34 @@ function SoulPartyFrameMixin:StopDrag()
 end
 
 function SoulPartyFrame_UpdateSettingFrameSize()
+	
+	if not SoulPartyFrame.headerFrame then return end;
 	local scale = 1
 	if SPF_DB then
 		scale = SPF_DB.party_scale
 	end
-	SoulPartyFrame:SetScale(scale)
+	SoulPartyFrame.headerFrame:SetScale(scale*0.7)
 end
 
 function SoulPartyFrame_UpdateSettingFramePoint()
+	
+	if not SoulPartyFrame.headerFrame then return end;
 	local point = "TOPLEFT"
 	local relativePoint = "TOPLEFT"
 	local x = 0
 	local y = 0
 	if SPF_DB then
-		point = SPF_DB.party_point
-		relativePoint = SPF_DB.party_relative_point
+		point = SPF_DB.party_point;
+		relativePoint = SPF_DB.party_relative_point;
 		x = math.floor(SPF_DB.party_position_x)
 		y = math.floor(SPF_DB.party_position_y)
 	end
-	SoulPartyFrame:ClearAllPoints()
-	SoulPartyFrame:SetPoint(point, UIParent, relativePoint, x, y)
+	SoulPartyFrame.headerFrame:ClearAllPoints()
+	SoulPartyFrame.headerFrame:SetPoint(point, UIParent, relativePoint, x, y)
 end
 
 function SoulPartyFrameMixin:OnShow()
+	self:CreateHeader()
 	--Load settings from profile
 	self:LoadSettings()
 
@@ -69,20 +116,15 @@ function SoulPartyFrameMixin:OnShow()
 end
 
 function SoulPartyFrameMixin:CheckIfParty()
-
-	local count = GetNumGroupMembers()
-	if count == 0 then
-		count = GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE)-1;
-	end
-	if (count > 5 or count <=1) then
+	if not IsInGroup() or IsInRaid() then
 		if not InCombatLockdown() then
-			self:Hide()
+			self.headerFrame:Hide()
 		end
 	else
 		if not self:IsVisible() then
 			if not InCombatLockdown() then
-				self:Show()
-				self:SetAttribute("forceUpdate",time())
+				self.headerFrame:Show()
+				self.headerFrame:SetAttribute("forceUpdate",time())
 			end
 		end
 	end
@@ -99,42 +141,43 @@ end
 
 function SoulPartyFrameMixin:LoadSettings()
 	
-
-	self:SetAttributeNoHandler("showPlayer",SPF_DB.show_player_frame)
+	self.headerFrame:SetAttribute("showPlayer",SPF_DB.show_player_frame)
 
 	if SPF_DB.party_layout == "HORIZONTAL" then
-		self:SetAttributeNoHandler("point","LEFT")
+		self.headerFrame:SetAttributeNoHandler("point","LEFT")
 		for i = 1, (MAX_PARTY_MEMBERS + 1) do
-			local memberFrame = self[i]
-			if not memberFrame then return end
+			if not self.headerFrame[i] then return end
+			local memberFrame = self.headerFrame[i]
 			memberFrame:ClearPoint("TOP")
 		end
 	else
-		self:SetAttributeNoHandler("point","TOP")
+		self.headerFrame:SetAttributeNoHandler("point","TOP")
 		for i = 1, (MAX_PARTY_MEMBERS + 1) do
-			local memberFrame = self[i]
-			if not memberFrame then return end
+			if not self.headerFrame[i] then return end
+			local memberFrame = self.headerFrame[i]
 			memberFrame:ClearPoint("LEFT")
 		end
 	end
 end
 
 function SoulPartyFrameMixin:UpdateLayout()
+	if not self.headerFrame then return end
+	
 	self:LoadSettings()
 	
-	self:SetAttribute("forceUpdate",time())
+	self.headerFrame:SetAttribute("forceUpdate",time())
 
 	for i = 1, (MAX_PARTY_MEMBERS + 1) do
-		local memberFrame = self[i]
-		if not memberFrame then return end
+		if not self.headerFrame[i] or not self.headerFrame[i].unitFrame then return end
+		local memberFrame = self.headerFrame[i].unitFrame
 		memberFrame:UpdateAuraAnchors()
 	end
 end
 
 function SoulPartyFrameMixin:UpdateMemberFrames()
 	for i = 1, (MAX_PARTY_MEMBERS + 1) do
-		local memberFrame = self[i]
-		if not memberFrame then return end
+		if not self.headerFrame[i] or not self.headerFrame[i].unitFrame then return end
+		local memberFrame = self.headerFrame[i].unitFrame
 		memberFrame:UpdateMember()
 	end
 end
@@ -147,35 +190,48 @@ function SoulPartyFrameMixin:GetLayout()
 	end
 end
 
-function SoulPartyFrame_Unlock()
-	SoulPartyFrame:SetMovable(true)
-    SoulPartyFrame:EnableMouse(true)
-	SoulPartyFrame.Background:Show();
+function SoulPartyFrameMixin:Unlock()
+	local frame = self.headerFrame
+
+	if not frame then return end;
+	
+	frame:SetMovable(true)
+    frame:RegisterForDrag("LeftButton")
+    frame:EnableMouse(true)
+    frame:SetScript("OnDragStart", frame.StartMoving)
+	frame:SetScript("OnDragStop", function()
+		self:StopDrag()
+	end)
 
 	for i = 1, (MAX_PARTY_MEMBERS + 1) do
-		local memberFrame = SoulPartyFrame[i]
+		local memberFrame = frame[i]
 		if not memberFrame then return end
 		memberFrame:EnableMouse(false)
 	end
 end
 
-function SoulPartyFrame_Lock()
-	SoulPartyFrame:SetMovable(false)
-    SoulPartyFrame:EnableMouse(false)
-	SoulPartyFrame.Background:Hide();
+function SoulPartyFrameMixin:Lock()
+	local frame = self.headerFrame
+
+	if not frame then return end;
+
+	frame:SetMovable(false)
+    frame:EnableMouse(false)
+	
 	for i = 1, (MAX_PARTY_MEMBERS + 1) do
-		local memberFrame = SoulPartyFrame[i]
+		local memberFrame = frame[i]
 		if not memberFrame then return end
 		memberFrame:EnableMouse(true)
 	end
 end
 
+
 function SoulPartyFrame_IsLocked()
-	return not SoulPartyFrame:IsMovable()
+	return not SoulPartyFrame.headerFrame:IsMovable()
 end
 
 function SoulPartyFrame_IsUnlocked()
-	return SoulPartyFrame:IsMovable()
+	return SoulPartyFrame.headerFrame:IsMovable()
 end
 
 function SOUL_GetClassDispels(unit)

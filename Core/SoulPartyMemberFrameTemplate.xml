@@ -1,5 +1,5 @@
 <Ui xmlns='http://www.blizzard.com/wow/ui/'>
-	<Button name="SoulPartyMemberFrameTemplate" mixin="SoulPartyMemberFrameMixin" hidden="true" inherits="SecureUnitButtonTemplate, PingableUnitFrameTemplate" virtual="true">
+	<Button name="SoulPartyMemberFrameTemplate" mixin="SoulPartyMemberFrameMixin" virtual="true">
 		<Size x="232" y="100"/>
 		<KeyValues>
 			<KeyValue key="disablePortraitMask" value="true" type="boolean"/>
@@ -311,12 +311,5 @@
 				</Layers>
 			</Frame>
 		</Frames>
-		<Scripts>
-			<OnEvent method="OnEvent"/>
-			<OnEnter method="OnEnter"/>
-			<OnLeave method="OnLeave"/>
-			<OnUpdate method="OnUpdate"/>
-			<OnAttributeChanged method = "OnAttributeChanged"/>
-		</Scripts>
 	</Button>
 </Ui>
