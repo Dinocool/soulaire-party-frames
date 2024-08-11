@@ -356,7 +356,6 @@ function SpellDebug:AddColumn(row,width)
         else
             print("COULDNT FIND WIDTH: " .. (#columns+1))
         end
-        --DevTool:AddData(headerColumn)
     end
     column:SetLayout("Flow")
     row:AddChild(column)

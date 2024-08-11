@@ -51,8 +51,6 @@ function SoulPartyFrameMixin:CreateHeader()
 	--headerFrame:SetPoint("TOPLEFT",self,"TOPLEFT")
 	headerFrame:Show()
 	self.headerFrame = headerFrame
-
-	DevTool:AddData(headerFrame)
 end
 
 function SoulPartyFrameMixin:StopDrag()
