@@ -537,6 +537,8 @@ end
 
 function SoulPartyMemberFrameMixin:OnEvent(event, ...)
 	--securecall("UnitFrame_OnEvent", self, event, ...)
+	--Do nothing if we don't have a unit
+	if not self.unit then return end
 
 	local arg1, arg2, arg3 = ...
 	if event == "UNIT_NAME_UPDATE" and arg1 == self.unit then
