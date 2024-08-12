@@ -121,38 +121,6 @@ function SoulPartyMemberFrameMixin:AddPulseAnimation(frame)
     end
 end
 
-function SoulPartyMemberFrameMixin:UpdateHealthBarTextAnchors()
-	local healthBarTextOffsetX = 0
-	local healthBarTextOffsetY = 0
-	if (LOCALE_koKR) then
-		healthBarTextOffsetY = 1
-	elseif (LOCALE_zhCN) then
-		healthBarTextOffsetY = 2
-	end
-
-	self.HealthBar.CenterText:SetPoint("CENTER", self.HealthBar, "CENTER", 0, healthBarTextOffsetY)
-	self.HealthBar.LeftText:SetPoint("LEFT", self.HealthBar, "LEFT", healthBarTextOffsetX, healthBarTextOffsetY)
-	self.HealthBar.RightText:SetPoint("RIGHT", self.HealthBar, "RIGHT", -healthBarTextOffsetX, healthBarTextOffsetY)
-end
-
-function SoulPartyMemberFrameMixin:UpdateManaBarTextAnchors()
-	local manaBarTextOffsetY = 0
-	if (LOCALE_koKR) then
-		manaBarTextOffsetY = 1
-	elseif (LOCALE_zhCN) then
-		manaBarTextOffsetY = 2
-	end
-
-	self.ManaBar.CenterText:SetPoint("CENTER", self.ManaBar, "CENTER", 2, manaBarTextOffsetY)
-	self.ManaBar.RightText:SetPoint("RIGHT", self.ManaBar, "RIGHT", 0, manaBarTextOffsetY)
-
-	if(self.state == "player") then
-		self.ManaBar.LeftText:SetPoint("LEFT", self.ManaBar, "LEFT", 4, manaBarTextOffsetY)
-	else
-		self.ManaBar.LeftText:SetPoint("LEFT", self.ManaBar, "LEFT", 3, manaBarTextOffsetY)
-	end
-end
-
 function SoulPartyMemberFrameMixin:Initialize()
 	-- Hook into parents methods
 	local parent = self:GetParent()
@@ -426,6 +394,7 @@ function SoulPartyMemberFrameMixin:UpdateMemberHealth(elapsed)
 end
 
 function SoulPartyMemberFrameMixin:UpdateDistance()
+	if not self.unit then return end
 	local inRange, _ = UnitInRange(self.unit)
 
     if inRange then
@@ -695,11 +664,6 @@ function SoulPartyMemberFrameMixin:PartyMemberHealthCheck(value)
 	else
 		self.PortraitFrame.Portrait:SetVertexColor(1.0, 1.0, 1.0, 1.0)
 	end
-end
-
-function SoulPartyMemberFrameMixin:InitializePartyFrameDropDown()
-	local dropdown = UIDROPDOWNMENU_OPEN_MENU or self.DropDown
-	UnitPopup_ShowMenu(dropdown, "PARTY", self.unit)
 end
 
 function SoulPartyMemberFrameMixin:UpdateAuras(unitAuraUpdateInfo)
