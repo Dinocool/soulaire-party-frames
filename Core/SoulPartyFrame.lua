@@ -4,9 +4,11 @@ function SoulPartyFrameMixin:OnLoad()
 	_G["SoulPartyFrame"] = self
 	self:RegisterEvent("GROUP_ROSTER_UPDATE")
 	self:RegisterEvent("PLAYER_TALENT_UPDATE")
+	self:RegisterEvent("EDIT_MODE_LAYOUTS_UPDATED")
 end
 
-
+local EditModeLib = LibStub:GetLibrary("EditModeExpanded-1.0")
+local LibDD = LibStub:GetLibrary("LibUIDropDownMenu-4.0")
 
 local function InitializeUnit(header, frameName)
 	local frame = _G[frameName]
@@ -19,11 +21,18 @@ local function InitializeUnit(header, frameName)
 	frame.unitFrame:Initialize()
 end
 
+local function LayoutValueChanged(self,layout,dropdown,checked)
+	layout().value = self.value
+	LibDD:UIDropDownMenu_SetText(dropdown, self.value)
+	SoulPartyFrame:UpdateLayout()
+end
+
 function SoulPartyFrameMixin:CreateHeader()
 
 	local type = "party"
 	local headerFrame = CreateFrame("Frame", "SUFHeader" .. type, nil, "PingTopLevelPassThroughAttributeTemplate, ResizeLayoutFrame, SecureGroupHeaderTemplate")
-	
+	self.headerFrame = headerFrame
+
 	headerFrame:SetAttribute("template","SecureUnitButtonTemplate")
 	headerFrame:SetAttribute("showParty",true)
 	headerFrame:SetAttribute("showRaid",false)
@@ -50,51 +59,56 @@ function SoulPartyFrameMixin:CreateHeader()
 	--headerFrame:ClearAllPoints()
 	--headerFrame:SetPoint("TOPLEFT",self,"TOPLEFT")
 	headerFrame:Show()
-	self.headerFrame = headerFrame
 end
 
-function SoulPartyFrameMixin:StopDrag()
-	self.headerFrame:StopMovingOrSizing()
-	if SPF_DB then
-		local point, _, relativePoint, x, y = self.headerFrame:GetPoint()
-		SPF_DB.party_point = point
-		SPF_DB.party_relative_point = relativePoint
-		SPF_DB.party_position_x = x
-		SPF_DB.party_position_y = y
-	end
-end
+function SoulPartyFrameMixin:LoadProfile()
+	if not self.headerFrame then return end
+	--Do registration
+	if not EditModeLib:IsRegistered(self.headerFrame) then
+		EditModeLib:RegisterFrame(self.headerFrame, "Party Frames", SPF_DB.party.frame)
+		EditModeLib:RegisterResizable(self.headerFrame)
+		
+		EditModeLib:RegisterCustomCheckbox(self.headerFrame,"Show Player",
+		function ()
+			SoulPartyFrame.showPlayer=true;
+			self.headerFrame:SetAttribute("showPlayer",true)
+		end,
+		function ()
+			SoulPartyFrame.showPlayer=false;
+			self.headerFrame:SetAttribute("showPlayer",false)
+		end)
 
-function SoulPartyFrame_UpdateSettingFrameSize()
-	
-	if not SoulPartyFrame.headerFrame then return end;
-	local scale = 1
-	if SPF_DB then
-		scale = SPF_DB.party_scale
-	end
-	SoulPartyFrame.headerFrame:SetScale(scale*0.7)
-end
+		local dropdown,layout = EditModeLib:RegisterDropdown(self.headerFrame,LibDD,"layout")
 
-function SoulPartyFrame_UpdateSettingFramePoint()
-	
-	if not SoulPartyFrame.headerFrame then return end;
-	local point = "TOPLEFT"
-	local relativePoint = "TOPLEFT"
-	local x = 0
-	local y = 0
-	if SPF_DB then
-		point = SPF_DB.party_point;
-		relativePoint = SPF_DB.party_relative_point;
-		x = math.floor(SPF_DB.party_position_x)
-		y = math.floor(SPF_DB.party_position_y)
+		LibDD:UIDropDownMenu_Initialize(dropdown,
+		function(frame,level,menuList)
+			local info = LibDD:UIDropDownMenu_CreateInfo()
+			info.text = "Horizontal"
+			info.checked = layout().value=="Horizontal"
+			info.func = LayoutValueChanged
+			info.arg1=layout
+			info.arg2 = dropdown
+			LibDD:UIDropDownMenu_AddButton(info)
+			info.text = "Vertical"
+			info.checked = layout().value=="Vertical"
+			LibDD:UIDropDownMenu_AddButton(info)
+		end
+	)
+
+			
+		LibDD:UIDropDownMenu_SetText(dropdown,layout().value)
+		SoulPartyFrame.layout=layout
+
+		if layout().value == "Horizontal" then
+			self.headerFrame:SetAttribute("point","LEFT")
+		else
+			self.headerFrame:SetAttribute("point","TOP")
+		end
 	end
-	SoulPartyFrame.headerFrame:ClearAllPoints()
-	SoulPartyFrame.headerFrame:SetPoint(point, UIParent, relativePoint, x, y)
 end
 
 function SoulPartyFrameMixin:OnShow()
 	self:CreateHeader()
-	--Load settings from profile
-	self:LoadSettings()
 
 	--Populate what dispells our player knows
 	self.dispels=SOUL_GetClassDispels("player")
@@ -131,39 +145,33 @@ end
 function SoulPartyFrameMixin:OnEvent(event, ...)
 	if event == "PLAYER_TALENT_UPDATE" then
 		self.dispels = SOUL_GetClassDispels("player")
-		SPF:ChangeRole()
+		--SPF:ChangeRole()
+		--Reload our profile if it's already been loaded
+		if self.headerFrame then
+        	--self:LoadProfile()
+		end
 	elseif event == "GROUP_ROSTER_UPDATE" then
 		self:CheckIfParty()
 	end
 end
 
-function SoulPartyFrameMixin:LoadSettings()
-	
-	self.headerFrame:SetAttribute("showPlayer",SPF_DB.show_player_frame)
-
-	if SPF_DB.party_layout == "HORIZONTAL" then
-		self.headerFrame:SetAttributeNoHandler("point","LEFT")
-		for i = 1, (MAX_PARTY_MEMBERS + 1) do
-			if not self.headerFrame[i] then return end
-			local memberFrame = self.headerFrame[i]
-			memberFrame:ClearPoint("TOP")
-		end
-	else
-		self.headerFrame:SetAttributeNoHandler("point","TOP")
-		for i = 1, (MAX_PARTY_MEMBERS + 1) do
-			if not self.headerFrame[i] then return end
-			local memberFrame = self.headerFrame[i]
-			memberFrame:ClearPoint("LEFT")
-		end
-	end
-end
-
 function SoulPartyFrameMixin:UpdateLayout()
-	if not self.headerFrame then return end
-	
-	self:LoadSettings()
-	
-	self.headerFrame:SetAttribute("forceUpdate",time())
+	if self.layout().value == "Horizontal" then
+		for i = 1, (MAX_PARTY_MEMBERS + 1) do
+			if not self.headerFrame[i] then break end
+			local memberFrame = self.headerFrame[i]
+			--memberFrame:ClearPoint("TOP")
+		end
+		--self.headerFrame:SetAttribute("point","LEFT")
+	else
+		for i = 1, (MAX_PARTY_MEMBERS + 1) do
+			if not self.headerFrame[i] then break end
+			local memberFrame = self.headerFrame[i]
+			--memberFrame:ClearPoint("LEFT")
+		end
+		
+		--self.headerFrame:SetAttribute("point","TOP")
+	end
 
 	for i = 1, (MAX_PARTY_MEMBERS + 1) do
 		if not self.headerFrame[i] or not self.headerFrame[i].unitFrame then return end
@@ -181,55 +189,11 @@ function SoulPartyFrameMixin:UpdateMemberFrames()
 end
 
 function SoulPartyFrameMixin:GetLayout()
-	if SPF_DB.party_layout == "VERTICAL" then
+	if self.layout == "Vertical" then
 		return self.VerticalLayout
 	else
 		return self.HorizontalLayout
 	end
-end
-
-function SoulPartyFrameMixin:Unlock()
-	local frame = self.headerFrame
-
-	if not frame then return end;
-	
-	frame:SetMovable(true)
-    frame:RegisterForDrag("LeftButton")
-    frame:EnableMouse(true)
-    frame:SetScript("OnDragStart", frame.StartMoving)
-	frame:SetScript("OnDragStop", function()
-		self:StopDrag()
-	end)
-
-	for i = 1, (MAX_PARTY_MEMBERS + 1) do
-		local memberFrame = frame[i]
-		if not memberFrame then return end
-		memberFrame:EnableMouse(false)
-	end
-end
-
-function SoulPartyFrameMixin:Lock()
-	local frame = self.headerFrame
-
-	if not frame then return end;
-
-	frame:SetMovable(false)
-    frame:EnableMouse(false)
-	
-	for i = 1, (MAX_PARTY_MEMBERS + 1) do
-		local memberFrame = frame[i]
-		if not memberFrame then return end
-		memberFrame:EnableMouse(true)
-	end
-end
-
-
-function SoulPartyFrame_IsLocked()
-	return not SoulPartyFrame.headerFrame:IsMovable()
-end
-
-function SoulPartyFrame_IsUnlocked()
-	return SoulPartyFrame.headerFrame:IsMovable()
 end
 
 function SOUL_GetClassDispels(unit)

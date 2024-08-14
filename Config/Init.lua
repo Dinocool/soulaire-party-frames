@@ -3,6 +3,10 @@ SPF = LibStub("AceAddon-3.0"):NewAddon("SPF","AceConsole-3.0","AceHook-3.0", "Ac
 -- Database Default profile
 local defaults = {
     profile = {
+        party={
+            frame={
+            }
+        },
         party_point = "TOPLEFT",
         party_relative_point = "TOPLEFT",
         party_position_x = 300,
@@ -29,11 +33,12 @@ function SPF:OnInitialize()
     SPF_PROFILE = self.db
     -- Assign DB to a global variable
     SPF_DB = self.db.profile;
+end
 
-    SoulPartyFrame_UpdateSettingFrameSize()
-	SoulPartyFrame_UpdateSettingFramePoint()
-
+function SPF:OnEnable()
+    SPF:HideBlizzardFrames()
     SoulPartyFrame:Show()
+    SoulPartyFrame:LoadProfile()
 end
 
 function SPF:ChangeRole()
@@ -51,8 +56,5 @@ function SPF:ChangeRole()
             self.db:ResetProfile()
             SPF_DB.initialized=true
         end
-        SoulPartyFrame_UpdateSettingFrameSize()
-	    SoulPartyFrame_UpdateSettingFramePoint()
-        SoulPartyFrame:UpdateLayout()
     end
 end

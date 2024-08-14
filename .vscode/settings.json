@@ -258,7 +258,28 @@
         "UnitPowerType",
         "UnitPowerMax",
         "UnitPower",
-        "SetPortraitTexture"
+        "SetPortraitTexture",
+        "nop",
+        "EditModeSystemMixin",
+        "RESET",
+        "FocusFrameSpellBar",
+        "EditModeSystemSettingsDialogMixin",
+        "HUD_EDIT_MODE_REVERT_CHANGES",
+        "HUD_EDIT_MODE_SETTING_UNIT_FRAME_FRAME_SIZE",
+        "EventUtil",
+        "GenerateClosure",
+        "CreateFramePoolCollection",
+        "EditModeSystemSettingsDialog",
+        "TalkingHeadFrame",
+        "MinimalSliderWithSteppersMixin",
+        "UIDROPDOWNMENU_MAXLEVELS",
+        "ExecuteFrameScript",
+        "DropDownMenuButtonMixin",
+        "TooltipBackdropTemplateMixin",
+        "SharedTooltip_SetBackdropStyle",
+        "GameTooltip_Hide",
+        "GameTooltip_AddErrorLine",
+        "UIDropDownMenu_AddButton"
     ],
     "Lua.runtime.version": "Lua 5.1",
     "Lua.runtime.builtin": {
@@ -273,6 +294,6 @@
         "utf8": "disable"
     },
     "Lua.workspace.library": [
-        "$USERPROFILE\\.vscode\\extensions\\ketho.wow-api-0.15.8\\Annotations"
+        "~\\.vscode\\extensions\\ketho.wow-api-0.16.5\\Annotations"
     ]
 }

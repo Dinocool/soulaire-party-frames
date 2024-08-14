@@ -10,4 +10,6 @@
   <Include file='AceEvent-3.0\AceEvent-3.0.xml'/>
   <Include file='AceHook-3.0\AceHook-3.0.xml'/>
   <Include file='AceTimer-3.0\AceTimer-3.0.xml'/>
+  <Include file='EditModeExpanded-1.0\EditModeExpanded-1.0.xml'/>
+  <Include file='LibUIDropDownMenu\LibUIDropDownMenu.xml'/>
 </Ui>
