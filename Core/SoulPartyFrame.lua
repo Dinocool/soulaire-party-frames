@@ -25,7 +25,6 @@ local function InitializeUnit(header, frameName)
 	end
 	frame.unitFrame:SetAllPoints(frame)
 	frame.unitFrame:Initialize()
-	frame.unitFrame.unit = frame.unit
 end
 
 function SoulPartyFrameMixin:CreateHeader()
