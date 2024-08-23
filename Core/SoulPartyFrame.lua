@@ -30,7 +30,7 @@ end
 function SoulPartyFrameMixin:CreateHeader()
 
 	local type = "party"
-	local headerFrame = CreateFrame("Frame", "SUFHeader" .. type, nil, "PingTopLevelPassThroughAttributeTemplate, ResizeLayoutFrame, SecureGroupHeaderTemplate")
+	local headerFrame = CreateFrame("Frame", "SUFHeader" .. type, nil, "ResizeLayoutFrame, SecureGroupHeaderTemplate")
 	headerFrame:SetParent(self)
 	headerFrame:SetAttribute("template","SecureUnitButtonTemplate")
 	headerFrame:SetAttribute("showParty",true)

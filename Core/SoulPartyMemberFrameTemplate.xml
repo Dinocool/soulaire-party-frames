@@ -1,5 +1,5 @@
 <Ui xmlns='http://www.blizzard.com/wow/ui/'>
-	<Button name="SoulPartyMemberFrameTemplate" mixin="SoulPartyMemberFrameMixin" virtual="true">
+	<Button name="SoulPartyMemberFrameTemplate" inherits="PingableUnitFrameTemplate" mixin="SoulPartyMemberFrameMixin" virtual="true">
 		<Size x="232" y="100"/>
 		<KeyValues>
 			<KeyValue key="disablePortraitMask" value="true" type="boolean"/>
