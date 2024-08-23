@@ -3,7 +3,15 @@ SoulPartyFrameMixin = {}
 function SoulPartyFrameMixin:OnLoad()
 	_G["SoulPartyFrame"] = self
 	self:RegisterEvent("GROUP_ROSTER_UPDATE")
+	self:RegisterEvent("GROUP_JOINED")
+	self:RegisterEvent("GROUP_FORMED")
+	self:RegisterEvent("GROUP_LEFT")
 	self:RegisterEvent("PLAYER_TALENT_UPDATE")
+	self:RegisterEvent("CINEMATIC_START")
+	self:RegisterEvent("CINEMATIC_STOP")
+	self:RegisterEvent("PLAY_MOVIE")
+	self:RegisterEvent("STOP_MOVIE")
+	self:RegisterEvent("PLAYER_REGEN_ENABLED")
 end
 
 
@@ -17,6 +25,7 @@ local function InitializeUnit(header, frameName)
 	end
 	frame.unitFrame:SetAllPoints(frame)
 	frame.unitFrame:Initialize()
+	frame.unitFrame.unit = frame.unit
 end
 
 function SoulPartyFrameMixin:CreateHeader()
@@ -115,16 +124,30 @@ end
 
 function SoulPartyFrameMixin:CheckIfParty()
 	if not IsInGroup() or IsInRaid() then
-		if not InCombatLockdown() then
-			self.headerFrame:Hide()
-		end
+		self:QueueHide()
 	else
-		if not self:IsVisible() then
-			if not InCombatLockdown() then
-				self.headerFrame:Show()
+		if not self.headerFrame:IsVisible() then
+			if not InCombatLockdown() and not IsInCinematicScene() and not InCinematic() then
+				self:QueueShow()
 				self.headerFrame:SetAttribute("forceUpdate",time())
 			end
 		end
+	end
+end
+
+function SoulPartyFrameMixin:QueueHide()
+	if not InCombatLockdown() then
+		self.headerFrame:Hide()
+	else
+		self.queueHide=true
+	end
+end
+
+function SoulPartyFrameMixin:QueueShow()
+	if not InCombatLockdown() then
+		self.headerFrame:Show()
+	else
+		self.queueShow=true
 	end
 end
 
@@ -132,7 +155,20 @@ function SoulPartyFrameMixin:OnEvent(event, ...)
 	if event == "PLAYER_TALENT_UPDATE" then
 		self.dispels = SOUL_GetClassDispels("player")
 		SPF:ChangeRole()
-	elseif event == "GROUP_ROSTER_UPDATE" then
+	elseif event == "CINEMATIC_START" or event == "PLAY_MOVIE" then
+		self:QueueHide()
+	elseif event == "CINEMATIC_STOP" or event == "STOP_MOVIE" then
+		self:QueueShow()
+	elseif event == "PLAYER_REGEN_ENABLED" then
+		if self.queueShow then 
+			self.headerFrame:Show()
+			self.queueShow=false
+		end
+		if self.queueHide then 
+			self.headerFrame:Hide()
+			self.queueHide=false
+		end
+	else
 		self:CheckIfParty()
 	end
 end

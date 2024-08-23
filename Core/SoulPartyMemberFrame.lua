@@ -143,8 +143,6 @@ function SoulPartyMemberFrameMixin:Initialize()
 	_G["SoulPartyFrame"..self.layoutIndex] = self
 	-- Set so weakauras can hook in
 	_G["SUFHeaderparty"..self.layoutIndex] = self
-
-	self.unit = parent.unit
 end
 
 function SoulPartyMemberFrameMixin:OnUnitChanged()
@@ -914,6 +912,10 @@ end
 local Blacklist = {
 	type = 'Blacklist',
 	spells = {
+		--GROUP BUFFS
+		[6673]		= true, -- BATTLE SHOUT
+		[1459]		= true, -- BATTLE SHOUT
+		--OTHER
 		[8326]		= true, -- Ghost
 		[8733]		= true, -- Blessing of Blackfathom
 		[15007]		= true, -- Ress Sickness
