@@ -32,7 +32,7 @@ function SoulPartyFrameMixin:CreateHeader()
 
 	local type = "party"
 	local headerFrame = CreateFrame("Frame", "SUFHeader" .. type, nil, "PingTopLevelPassThroughAttributeTemplate, ResizeLayoutFrame, SecureGroupHeaderTemplate")
-	
+	headerFrame:SetParent(self)
 	headerFrame:SetAttribute("template","SecureUnitButtonTemplate")
 	headerFrame:SetAttribute("showParty",true)
 	headerFrame:SetAttribute("showRaid",false)
@@ -80,7 +80,7 @@ function SoulPartyFrame_UpdateSettingFrameSize()
 	if SPF_DB then
 		scale = SPF_DB.party_scale
 	end
-	SoulPartyFrame.headerFrame:SetScale(scale*0.7)
+	SoulPartyFrame:SetScale(scale)
 end
 
 function SoulPartyFrame_UpdateSettingFramePoint()
@@ -137,7 +137,7 @@ end
 
 function SoulPartyFrameMixin:QueueHide()
 	if not InCombatLockdown() then
-		self.headerFrame:Hide()
+		self:Hide()
 	else
 		self.queueHide=true
 	end
@@ -145,7 +145,7 @@ end
 
 function SoulPartyFrameMixin:QueueShow()
 	if not InCombatLockdown() then
-		self.headerFrame:Show()
+		self:Show()
 	else
 		self.queueShow=true
 	end

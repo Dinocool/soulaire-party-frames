@@ -133,8 +133,12 @@ function SoulPartyMemberFrameMixin:Initialize()
 			end
 		end)
 	self:SetScript("OnEvent",self.OnEvent)
-	parent:HookScript("OnEnter",function(frame) UnitFrame_OnEnter(self) end)
-	parent:HookScript("OnLeave",function(frame) UnitFrame_OnLeave(self) end)
+	parent:HookScript("OnEnter",function(frame) 
+			self:OnEnter()
+		end)
+	parent:HookScript("OnLeave",function(frame) 			
+			self:OnLeave()
+		end)
 	
 	local length = string.len(parent:GetName());
 	self.layoutIndex = tonumber(string.sub(parent:GetName(),length,length))
@@ -610,11 +614,15 @@ function SoulPartyMemberFrameMixin:OnUpdate(elapsed)
 end
 
 function SoulPartyMemberFrameMixin:OnEnter()
-	UnitFrame_OnEnter(self)
+	if self.unit ~= nil then
+		UnitFrame_OnEnter(self)
+	end
 end
 
 function SoulPartyMemberFrameMixin:OnLeave()
-	UnitFrame_OnLeave(self)
+	if self.unit ~= nil then
+		UnitFrame_OnLeave(self)
+	end
 end
 
 function SoulPartyMemberFrameMixin:UpdateOnlineStatus()
