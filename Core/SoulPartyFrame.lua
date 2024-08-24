@@ -137,7 +137,9 @@ end
 function SoulPartyFrameMixin:QueueHide()
 	if not InCombatLockdown() then
 		self:Hide()
+		self:SetAlpha(1.0)
 	else
+		self:SetAlpha(0.0)
 		self.queueHide=true
 	end
 end
@@ -160,6 +162,7 @@ function SoulPartyFrameMixin:OnEvent(event, ...)
 		self:QueueShow()
 	elseif event == "PLAYER_REGEN_ENABLED" then
 		if self.queueShow then 
+			self:SetAlpha(1.0)
 			self.headerFrame:Show()
 			self.queueShow=false
 		end
