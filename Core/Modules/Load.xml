@@ -4,5 +4,4 @@
     <Script file="SoulHealthBar.lua"/>
     <Script file="SoulManaBar.lua"/>
     <Script file="SoulPortrait.lua"/>
-    <Script file="IncomingDamagePredict.lua"/>
 </Ui>

@@ -1,5 +1,4 @@
 <Ui xmlns='http://www.blizzard.com/wow/ui/'>
     <Include file='Init.lua'/>
     <Include file='Config.lua'/>
-    <Include file='SpellDebug.lua'/>
   </Ui>

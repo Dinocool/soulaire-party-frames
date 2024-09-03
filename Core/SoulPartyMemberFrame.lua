@@ -11,8 +11,7 @@ function SoulPartyMemberFrameMixin:UpdateArt()
 end
 
 function SoulPartyMemberFrameMixin:ToPlayerArt()
-    if self:IsForbidden() then return end
-    if InCombatLockdown() then return end
+    if self:IsForbidden() or InCombatLockdown() then return end
 
 	self.state = "player"
 	self.overrideUnit = nil
@@ -181,7 +180,6 @@ function SoulPartyMemberFrameMixin:Setup()
 	self:RegisterEvents()
 
 	self:UpdateArt()
-	self:SetFrameLevel(2)
 	self:UpdateNotPresentIcon()
 
 	UnitPowerBarAlt_Initialize(self.PowerBarAlt, self.unit, 0.5, "GROUP_ROSTER_UPDATE")
@@ -343,20 +341,12 @@ function SoulPartyMemberFrameMixin:UpdateMember()
 		if not self:IsForbidden() and not InCombatLockdown() then
 			self:Show()
 		end
-		if VoiceActivityManager then
-			local guid = UnitGUID(self:GetUnit())
-			VoiceActivityManager:RegisterFrameForVoiceActivityNotifications(self, guid, nil, "VoiceActivityNotificationPartyTemplate", "Button", PartyMemberFrameMixin.VoiceActivityNotificationCreatedCallback)
-		end
 
 		self:UpdateName()
 		self.HealthBar:EventUpdate()
 		self.ManaBar:UpdatePowerType()
 		self:UpdateDistance()
 	else
-		if VoiceActivityManager then
-			VoiceActivityManager:UnregisterFrameForVoiceActivityNotifications(self)
-			self.voiceNotification = nil
-		end
 		if not self:IsForbidden() and not InCombatLockdown() then
 			self:Hide()
 		end

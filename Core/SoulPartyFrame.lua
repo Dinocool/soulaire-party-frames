@@ -1,5 +1,26 @@
 SoulPartyFrameMixin = {}
 
+local combatMethodList = {}
+
+-- Calls the method if ooc, or deffers call to when out of combat
+function SoulPartyFrameMixin:ExecuteOOC(object, methodName, ...)
+	local func = object[methodName]
+    local args = {...}  -- Capture all arguments
+	if InCombatLockdown() then
+		table.insert(combatMethodList, {obj = object, method = func, args = args})
+	else
+		func(object, unpack(args))  -- Execute immediately if not in combat lockdown
+	end
+end
+
+function SoulPartyFrameMixin:CombatOver()
+	for _, entry in ipairs(combatMethodList) do
+        entry.method(entry.obj, unpack(entry.args))
+    end
+    -- Clear the method list after executing all methods
+    combatMethodList = {}
+end
+
 function SoulPartyFrameMixin:OnLoad()
 	_G["SoulPartyFrame"] = self
 	self:RegisterEvent("GROUP_ROSTER_UPDATE")
@@ -13,8 +34,6 @@ function SoulPartyFrameMixin:OnLoad()
 	self:RegisterEvent("STOP_MOVIE")
 	self:RegisterEvent("PLAYER_REGEN_ENABLED")
 end
-
-
 
 local function InitializeUnit(header, frameName)
 	local frame = _G[frameName]
@@ -38,6 +57,10 @@ function SoulPartyFrameMixin:CreateHeader()
 	headerFrame:SetAttribute("showSolo",false)
 	headerFrame:SetAttribute("groupBy","ROLE")
 	headerFrame:SetAttribute("groupingOrder","1,2,3,4,5,6,7,8")
+
+	--Load settings from profile
+	self:LoadSettings(headerFrame)
+
 	headerFrame:SetClampedToScreen(true)
 	headerFrame.initialConfigFunction = InitializeUnit
 
@@ -101,8 +124,7 @@ end
 
 function SoulPartyFrameMixin:OnShow()
 	self:CreateHeader()
-	--Load settings from profile
-	self:LoadSettings()
+	self:CheckIfParty()
 
 	--Populate what dispells our player knows
 	self.dispels=SOUL_GetClassDispels("player")
@@ -112,24 +134,14 @@ function SoulPartyFrameMixin:OnShow()
 		table.insert(OmniCD[1].unitFrameData,{ [1] = "SoulairePartyFrames",[2] = "SoulPartyFrame",[3] = "unit",})
 		self.injectedIntoOmni=true
 	end
-
-	--Setup damage prediction
-	if SPF_DB.show_damage_prediction then
-		self.DamagePrediction = CreateFrame("Frame","DamagePrediction")
-		self.DamagePrediction = Mixin(self.DamagePrediction,IncomingDamagePredictMixin)
-		self.DamagePrediction:Initialize()
-	end
 end
 
 function SoulPartyFrameMixin:CheckIfParty()
-	if not IsInGroup() or IsInRaid() then
+	if IsInRaid() then
 		self:QueueHide()
 	else
-		if not self.headerFrame:IsVisible() then
-			if not InCombatLockdown() and not IsInCinematicScene() and not InCinematic() then
-				self:QueueShow()
-				self.headerFrame:SetAttribute("forceUpdate",time())
-			end
+	if not IsInCinematicScene() and not InCinematic() then
+			self:QueueShow()
 		end
 	end
 end
@@ -141,6 +153,7 @@ function SoulPartyFrameMixin:QueueHide()
 	else
 		self:SetAlpha(0.0)
 		self.queueHide=true
+		self.queueShow=false
 	end
 end
 
@@ -148,14 +161,19 @@ function SoulPartyFrameMixin:QueueShow()
 	if not InCombatLockdown() then
 		self:Show()
 	else
-		self.queueShow=true
+		self.queueHide=false
+		if self:IsVisible() then
+			self:SetAlpha(1.0)
+		else
+			self.queueShow=true
+		end
 	end
 end
 
 function SoulPartyFrameMixin:OnEvent(event, ...)
 	if event == "PLAYER_TALENT_UPDATE" then
 		self.dispels = SOUL_GetClassDispels("player")
-		SPF:ChangeRole()
+		SoulPartyFrame:ExecuteOOC(SPF,"ChangeRole")
 	elseif event == "CINEMATIC_START" or event == "PLAY_MOVIE" then
 		self:QueueHide()
 	elseif event == "CINEMATIC_STOP" or event == "STOP_MOVIE" then
@@ -163,34 +181,34 @@ function SoulPartyFrameMixin:OnEvent(event, ...)
 	elseif event == "PLAYER_REGEN_ENABLED" then
 		if self.queueShow then 
 			self:SetAlpha(1.0)
-			self.headerFrame:Show()
+			self:Show()
 			self.queueShow=false
 		end
-		if self.queueHide then 
-			self.headerFrame:Hide()
+		if self.queueHide then
+			self:Hide()
 			self.queueHide=false
 		end
+		self:CombatOver()
 	else
 		self:CheckIfParty()
 	end
 end
 
-function SoulPartyFrameMixin:LoadSettings()
-	
-	self.headerFrame:SetAttribute("showPlayer",SPF_DB.show_player_frame)
+function SoulPartyFrameMixin:LoadSettings(headerFrame)
 
+	headerFrame:SetAttribute("showPlayer",SPF_DB.show_player_frame)
 	if SPF_DB.party_layout == "HORIZONTAL" then
-		self.headerFrame:SetAttributeNoHandler("point","LEFT")
+		headerFrame:SetAttributeNoHandler("point","LEFT")
 		for i = 1, (MAX_PARTY_MEMBERS + 1) do
-			if not self.headerFrame[i] then return end
-			local memberFrame = self.headerFrame[i]
+			if not headerFrame[i] then return end
+			local memberFrame = headerFrame[i]
 			memberFrame:ClearPoint("TOP")
 		end
 	else
-		self.headerFrame:SetAttributeNoHandler("point","TOP")
+		headerFrame:SetAttributeNoHandler("point","TOP")
 		for i = 1, (MAX_PARTY_MEMBERS + 1) do
-			if not self.headerFrame[i] then return end
-			local memberFrame = self.headerFrame[i]
+			if not headerFrame[i] then return end
+			local memberFrame = headerFrame[i]
 			memberFrame:ClearPoint("LEFT")
 		end
 	end
@@ -199,7 +217,7 @@ end
 function SoulPartyFrameMixin:UpdateLayout()
 	if not self.headerFrame then return end
 	
-	self:LoadSettings()
+	self:LoadSettings(self.headerFrame)
 	
 	self.headerFrame:SetAttribute("forceUpdate",time())
 
