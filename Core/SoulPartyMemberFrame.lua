@@ -105,6 +105,13 @@ function SoulPartyMemberFrameMixin:StatusArt()
     self:AddPulseAnimation(self.Flash)
 end
 
+function SoulPartyMemberFrameMixin:OnShow()
+	if self.Sheen then
+		self.Sheen:SetVertexColor(1.0,1.0,1.0)
+		self.Sheen.SwipeAnimation:Play()
+	end
+end
+
 function SoulPartyMemberFrameMixin:AddPulseAnimation(frame)
     if not frame.PulseAnimation then
         frame.PulseAnimation = frame:CreateAnimationGroup()
@@ -164,14 +171,27 @@ function SoulPartyMemberFrameMixin:Setup()
 	self.unitHPPercent = 1
 
 	--Setup the healthbar
-	self.HealthBar:Initialize(self.unit,true)
-	self.ManaBar:Initialize(self.unit,true)
+	self.HealthBar:Initialize(self,true)
+	self.ManaBar:Initialize(self,true)
 	self.PortraitFrame:Initialize(self.unit)
 
 	-- Mask the various bar assets, to avoid any overflow with the frame shape.
 	self.HealthBar:GetStatusBarTexture():AddMaskTexture(self.HealthBar.HealthBarMask)
 
 	self.ManaBar:GetStatusBarTexture():AddMaskTexture(self.ManaBar.ManaBarMask)
+
+	--Add a cool animation for when people join the party
+	self.SheenFrame = CreateFrame("Frame","SheenFrame",self)
+	self.SheenFrame:SetAllPoints(self)
+	self.Sheen = self.SheenFrame:CreateTexture("AuraSheen","OVERLAY")
+	self.Sheen:SetPoint("TOPLEFT",self,"TOPLEFT",-900,2)
+	self.Sheen:SetAtlas("loottoast-sheen")
+	self.Sheen:SetBlendMode("ADD")
+	self.Sheen:SetWidth(2048)
+    self.Sheen:SetHeight(96)
+	self.Sheen:AddMaskTexture(self.TextureMask)
+	self.Sheen:Hide()
+	self:AddSwipeAnimation(self.Sheen,512*2.0,0,3.0)
 
 	self:CreateAuras()
 	self:UpdateName()
@@ -309,6 +329,7 @@ function SoulPartyMemberFrameMixin:RegisterEvents()
 	self:RegisterEvent("INCOMING_SUMMON_CHANGED")
 	self:RegisterUnitEvent("UNIT_NAME_UPDATE",self.unit)
 	self:RegisterUnitEvent("UNIT_AURA", self.unit, self.petUnitToken)
+	self:RegisterUnitEvent("UNIT_HEALTH", self.unit, self.petUnitToken)
 end
 
 function SoulPartyMemberFrameMixin:UpdateVoiceActivityNotification()
@@ -364,7 +385,7 @@ function SoulPartyMemberFrameMixin:UpdateMember()
 end
 
 function SoulPartyMemberFrameMixin:UpdateMemberHealth(elapsed)
-	if ( (self.unitHPPercent > 0) and (self.unitHPPercent <= 0.2) ) then
+	if ( (self.unitHPPercent > 0) and (self.unitHPPercent <= 0.3) ) then
 		local alpha = 255
 		local counter = self.statusCounter + elapsed
 		local sign    = self.statusSign
@@ -381,7 +402,7 @@ function SoulPartyMemberFrameMixin:UpdateMemberHealth(elapsed)
 		else
 			alpha = (255 - (counter * 256)) / 255
 		end
-		self.PortraitFrame.PortraitFrame.Portrait:SetAlpha(alpha)
+		self.PortraitFrame.Portrait:SetAlpha(alpha)
 	end
 end
 
@@ -574,15 +595,14 @@ function SoulPartyMemberFrameMixin:OnEvent(event, ...)
 		self:UpdateNotPresentIcon()
 	elseif event == "INCOMING_SUMMON_CHANGED" then
 		self:UpdateNotPresentIcon()
+	elseif event =="UNIT_HEALTH" then
+		if arg1 == self:GetUnit() then
+			self:PartyMemberHealthCheck();
+		end
 	elseif event =="UNIT_AURA" then
 		if arg1 == self:GetUnit() then
 			local unitAuraUpdateInfo = arg2;
 			self:UpdateAuras(unitAuraUpdateInfo);
-		--TODO: Pet Handling
-		--else
-		--if arg1 == self.petUnitToken then
-		--self.PetFrame:UpdateAuras(unitAuraUpdateInfo);
-		--end
 		end
 	end
 end
@@ -633,7 +653,7 @@ function SoulPartyMemberFrameMixin:UpdateOnlineStatus()
 	end
 end
 
-function SoulPartyMemberFrameMixin:PartyMemberHealthCheck(value)
+function SoulPartyMemberFrameMixin:PartyMemberHealthCheck()
 	local unitHPMax, unitCurrHP
 	_, unitHPMax = self.HealthBar:GetMinMaxValues()
 
@@ -654,12 +674,19 @@ function SoulPartyMemberFrameMixin:PartyMemberHealthCheck(value)
 	end
 
 	if unitIsDead then
+		if self.alive then
+			--Play a dramatic swipe when the unit dies
+			self.alive=false
+			self.Sheen:SetVertexColor(1.0,0.0,0.0)
+			self.Sheen.SwipeAnimation:Play()
+		end
 		self.PortraitFrame.Portrait:SetVertexColor(0.35, 0.35, 0.35, 1.0)
 	elseif unitIsGhost then
 		self.PortraitFrame.Portrait:SetVertexColor(0.2, 0.2, 0.75, 1.0)
-	elseif (self.unitHPPercent > 0) and (self.unitHPPercent <= 0.2) then
+	elseif (self.unitHPPercent > 0) and (self.unitHPPercent <= 0.3) then
 		self.PortraitFrame.Portrait:SetVertexColor(1.0, 0.0, 0.0)
 	else
+		self.alive=true
 		self.PortraitFrame.Portrait:SetVertexColor(1.0, 1.0, 1.0, 1.0)
 	end
 end
@@ -832,7 +859,7 @@ function SoulPartyMemberFrameMixin:CreateAura(auraIndex, auraType)
     aura.Sheen:SetHeight(28)
 	aura.Sheen:AddMaskTexture(aura.IconMask)
 	aura.Sheen:Hide()
-	self:AddSwipeAnimation(aura.Sheen)
+	self:AddSwipeAnimation(aura.Sheen,64*1.5,0,0.75)
 	
     aura:EnableMouse(true)
     aura:SetScript("OnLeave",function()
@@ -840,13 +867,13 @@ function SoulPartyMemberFrameMixin:CreateAura(auraIndex, auraType)
     end)
 end
 
-function SoulPartyMemberFrameMixin:AddSwipeAnimation(frame)
+function SoulPartyMemberFrameMixin:AddSwipeAnimation(frame, offsetX, offsetY,duration)
     if not frame.SwipeAnimation then
         frame.SwipeAnimation = frame:CreateAnimationGroup()
         local animGroup = frame.SwipeAnimation
         animGroup.Swipe = animGroup:CreateAnimation("Translation")
-        animGroup.Swipe:SetDuration(0.75)
-        animGroup.Swipe:SetOffset(64*1.5,0)
+        animGroup.Swipe:SetDuration(duration)
+        animGroup.Swipe:SetOffset(offsetX,offsetY)
         animGroup.Swipe:SetSmoothing("OUT")
         animGroup:HookScript("OnPlay",function(self) frame:Show() end)
 		animGroup:HookScript("OnFinished",function(self) frame:Hide() end)

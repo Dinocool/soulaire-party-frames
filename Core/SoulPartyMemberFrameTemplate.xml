@@ -12,6 +12,12 @@
 						<Anchor point="CENTER"/>
 					</Anchors>
 				</Texture>
+				<MaskTexture parentKey="TextureMask" file="Interface\AddOns\SoulairePartyFrames\Art\UnitFrameMaskFilled" hWrapMode="CLAMPTOBLACKADDITIVE" vWrapMode="CLAMPTOBLACKADDITIVE">
+					<Size x="255" y="128"/>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</MaskTexture>
 				<FontString parentKey="Name" inherits="GameFontNormalSmall" justifyH="LEFT">
 					<Size x="120" y="12"/>
 					<Anchors>
@@ -42,7 +48,7 @@
 			</Layer>
 		</Layers>
 		<Frames>
-			<Frame parentKey="PortraitFrame" inherits="SecureFrameParentPropagationTemplate" mixin="SoulPortraitMixin" 	>
+			<Frame parentKey="PortraitFrame" inherits="	" mixin="SoulPortraitMixin">
 				<Size x="60" y="60"/>
 				<Anchors>
 					<Anchor point="TOPLEFT" x="24" y="-19"/>
@@ -125,30 +131,12 @@
 						</MaskTexture>
 					</Layer>
 				</Layers>
-				<!--
+				<BarTexture parentKey="HealthBarTexture" atlas="UI-HUD-UnitFrame-Player-PortraitOn-Bar-Health"/>
 				<Scripts>
-					<OnLoad>
-						self:SetMouseClickEnabled(false)
-						self:OnLoad()
-					</OnLoad>
-					<OnEnter inherit="prepend">
-						self:GetParent():OnEnter();
-					</OnEnter>
-					<OnLeave inherit="prepend">
-						self:GetParent():OnLeave();
-					</OnLeave>
 					<OnValueChanged>
-						self:GetParent():PartyMemberHealthCheck(value);
-					</OnValueChanged>
-					<OnSizeChanged>
-						UnitFrameHealPredictionBars_UpdateSize(self:GetParent());
-					</OnSizeChanged>
-					<OnValueChanged>
-						SOUL_TextStatusBar_OnValueChanged(self);
+						self.partyFrame:PartyMemberHealthCheck(value);
 					</OnValueChanged>
 				</Scripts>
-				-->
-				<BarTexture parentKey="HealthBarTexture" atlas="UI-HUD-UnitFrame-Player-PortraitOn-Bar-Health"/>
 			</StatusBar>
 			<StatusBar parentKey="ManaBar" mixin="SoulManaBarMixin" inherits="SecureFrameParentPropagationTemplate">
 				<Size x="129" y="10"/>
@@ -182,23 +170,6 @@
 						</MaskTexture>
 					</Layer>
 				</Layers>
-				<!--
-				<Scripts>
-					<OnLoad>
-						self:SetMouseClickEnabled(false);
-						SOUL_TextStatusBar_Initialize(self);
-					</OnLoad>
-					<OnEnter inherit="prepend">
-						self:GetParent():OnEnter();
-					</OnEnter>
-					<OnLeave inherit="prepend">
-						self:GetParent():OnLeave();
-					</OnLeave>
-					<OnValueChanged>
-						SOUL_TextStatusBar_Initialize(self);
-					</OnValueChanged>
-				</Scripts>
-			-->
 				<BarTexture atlas="UI-HUD-UnitFrame-Player-PortraitOn-Bar-Mana"/>
 			</StatusBar>
 			<Frame parentKey="PartyMemberOverlay" setAllPoints="true">
@@ -305,5 +276,10 @@
 				</Layers>
 			</Frame>
 		</Frames>
+		<Scripts>
+			<OnShow method="OnShow"/>
+			<OnUpdate method="OnUpdate"/>
+		</Scripts>
+				
 	</Button>
 </Ui>

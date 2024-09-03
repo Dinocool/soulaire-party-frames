@@ -16,9 +16,10 @@ local function AddFlashAnimation(frame)
 end
 
 --Intializes the healthbar
-function SoulHealthBarMixin:Initialize(unit, frequentUpdates)
+function SoulHealthBarMixin:Initialize(partyFrame, frequentUpdates)
     self.frequentUpdates=frequentUpdates
-    self:SetUnit(unit)
+	self.partyFrame = partyFrame
+    self:SetUnit(partyFrame.unit)
     self:SetScript("OnEvent", self.OnEvent)
     self:InitializeHealPrediction()
 	

@@ -1,12 +1,12 @@
 SoulManaBarMixin=CreateFromMixins(SoulTextStatusBarMixin) -- A Mana Bar Is a type of text status bar
 
 --Intializes the manabar
-function SoulManaBarMixin:Initialize(unit, frequentUpdates)
+function SoulManaBarMixin:Initialize(partyFrame, frequentUpdates)
     self.frequentUpdates=frequentUpdates
     
     self:RegisterEvent("UNIT_DISPLAYPOWER");
-
-    self:SetUnit(unit)
+	self.partyFrame = partyFrame
+    self:SetUnit(partyFrame.unit)
     self:SetScript("OnEvent", self.OnEvent)
     
     --Cap numeric display in our text status bar
