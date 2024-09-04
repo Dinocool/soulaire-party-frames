@@ -961,6 +961,8 @@ function SoulPartyMemberFrameMixin:SetAura(aura, auraType, auraIndex)
             if not self.StatusFlash:IsVisible() and SoulPartyFrame.dispels and SoulPartyFrame.dispels[string.lower(aura.dispelName)] and next(SoulPartyFrame.dispels[string.lower(aura.dispelName)]) ~= nil then
                 self.StatusFlash:Show()
                 self.StatusFlash:SetVertexColor(borderColor.r, borderColor.g, borderColor.b)
+				self.Sheen:SetVertexColor(borderColor.r, borderColor.g, borderColor.b)
+				self.Sheen.SwipeAnimation:Play()
             end
 			auraButton.Sheen:SetVertexColor(borderColor.r, borderColor.g, borderColor.b)
 		elseif aura.isFromPlayerOrPlayerPet then
