@@ -40,7 +40,7 @@ end
 
 function SoulPartyMemberFrameMixin:NoPowerBarPlayerArt()
     self.Texture:SetAtlas("plunderstorm-UI-HUD-UnitFrame-Player-PortraitOn-2x")
-    self.Flash:SetAtlas("plunderstorm-UI-HUD-UnitFrame-Player-PortraitOn-InCombat-2x", TextureKitConstants.UseAtlasSize)
+    self.StatusFlash:SetAtlas("plunderstorm-UI-HUD-UnitFrame-Player-PortraitOn-InCombat-2x", TextureKitConstants.UseAtlasSize)
 
     self.HealthBar:SetWidth(124)
     --self.HealthBar:SetPoint("TOPLEFT", 85, -41)
@@ -59,7 +59,7 @@ end
 function SoulPartyMemberFrameMixin:PowerBarPlayerArt()
     self.Texture:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn")
 
-    self.Flash:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-InCombat", TextureKitConstants.UseAtlasSize)
+    self.StatusFlash:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-InCombat", TextureKitConstants.UseAtlasSize)
 
     self.HealthBar:SetWidth(124)
     self.HealthBar:SetPoint("TOPLEFT", 85, -41)
@@ -100,16 +100,18 @@ end
 
 function SoulPartyMemberFrameMixin:StatusArt()
 
-    self.StatusFlash:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-Status", TextureKitConstants.UseAtlasSize)
-    self:AddPulseAnimation(self.StatusFlash)
+    self.Flash:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-Status", TextureKitConstants.UseAtlasSize)
     self:AddPulseAnimation(self.Flash)
+    self:AddPulseAnimation(self.StatusFlash)
+end
+
+
+
+function SoulPartyMemberFrameMixin:OnHide()
+	self.unit = nil
 end
 
 function SoulPartyMemberFrameMixin:OnShow()
-	if self.Sheen then
-		self.Sheen:SetVertexColor(1.0,1.0,1.0)
-		self.Sheen.SwipeAnimation:Play()
-	end
 end
 
 function SoulPartyMemberFrameMixin:AddPulseAnimation(frame)
@@ -130,10 +132,15 @@ end
 function SoulPartyMemberFrameMixin:Initialize()
 	-- Hook into parents methods
 	local parent = self:GetParent()
-
+	
+	self:AddPulseAnimation(self.IncomingRez)
 	parent:HookScript("OnAttributeChanged",function(frame,attribute,value)
 			if attribute == "unit" and self.unit ~= value and value ~= nil then
 				self.unit = value
+				if self.Sheen then
+					self.Sheen:SetVertexColor(1.0,1.0,1.0)
+					self.Sheen.SwipeAnimation:Play()
+				end
 				self:OnUnitChanged()
 				self:UpdateAssignedRoles()
 			end
@@ -327,6 +334,14 @@ function SoulPartyMemberFrameMixin:RegisterEvents()
 	self:RegisterEvent("UNIT_FLAGS")
 	self:RegisterEvent("UNIT_OTHER_PARTY_CHANGED")
 	self:RegisterEvent("INCOMING_SUMMON_CHANGED")
+
+	--Threat Changes
+	self:RegisterEvent("UNIT_THREAT_SITUATION_UPDATE")
+	self:RegisterEvent("UNIT_THREAT_LIST_UPDATE")
+
+	--Ressurection
+	self:RegisterEvent("INCOMING_RESURRECT_CHANGED")
+
 	self:RegisterUnitEvent("UNIT_NAME_UPDATE",self.unit)
 	self:RegisterUnitEvent("UNIT_AURA", self.unit, self.petUnitToken)
 	self:RegisterUnitEvent("UNIT_HEALTH", self.unit, self.petUnitToken)
@@ -551,7 +566,7 @@ end
 function SoulPartyMemberFrameMixin:OnEvent(event, ...)
 	--securecall("UnitFrame_OnEvent", self, event, ...)
 	--Do nothing if we don't have a unit
-	if not self.unit then return end
+	if not SOUL_ShouldUpdate(self) then return end
 
 	local arg1, arg2, arg3 = ...
 	if event == "UNIT_NAME_UPDATE" and arg1 == self.unit then
@@ -604,6 +619,34 @@ function SoulPartyMemberFrameMixin:OnEvent(event, ...)
 			local unitAuraUpdateInfo = arg2;
 			self:UpdateAuras(unitAuraUpdateInfo);
 		end
+	--Threat
+	elseif ( event == "UNIT_THREAT_LIST_UPDATE" or event == "UNIT_THREAT_SITUATION_UPDATE" ) then
+		self:UpdateThreat()
+	--Ressurection
+	elseif ( event == "INCOMING_RESURRECT_CHANGED" ) then
+		self:UpdateResurection()
+	end
+end
+
+function SoulPartyMemberFrameMixin:UpdateResurection()
+	if UnitHasIncomingResurrection(self.unit) then
+		self.IncomingRez:Show()
+	else
+		self.IncomingRez:Hide()
+	end
+end
+
+function SoulPartyMemberFrameMixin:UpdateThreat()
+	--Don't bother displaying threat if your a tank, as all is well
+	if (UnitGroupRolesAssigned(self.unit) == "TANK") then return end
+
+	local status = UnitThreatSituation(self.unit)
+
+	if (status and status > 0) then
+		self.Flash:SetVertexColor(GetThreatStatusColor(status));
+		self.Flash:Show();
+	else
+		self.Flash:Hide();
 	end
 end
 
@@ -915,9 +958,9 @@ function SoulPartyMemberFrameMixin:SetAura(aura, auraType, auraIndex)
                 aura.dispelName=""
             end
             borderColor = DebuffTypeColor[aura.dispelName]
-            if not self.Flash:IsVisible() and SoulPartyFrame.dispels and SoulPartyFrame.dispels[string.lower(aura.dispelName)] and next(SoulPartyFrame.dispels[string.lower(aura.dispelName)]) ~= nil then
-                self.Flash:Show()
-                self.Flash:SetVertexColor(borderColor.r, borderColor.g, borderColor.b)
+            if not self.StatusFlash:IsVisible() and SoulPartyFrame.dispels and SoulPartyFrame.dispels[string.lower(aura.dispelName)] and next(SoulPartyFrame.dispels[string.lower(aura.dispelName)]) ~= nil then
+                self.StatusFlash:Show()
+                self.StatusFlash:SetVertexColor(borderColor.r, borderColor.g, borderColor.b)
             end
 			auraButton.Sheen:SetVertexColor(borderColor.r, borderColor.g, borderColor.b)
 		elseif aura.isFromPlayerOrPlayerPet then
@@ -1000,7 +1043,7 @@ function SoulPartyMemberFrameMixin:BuffFilter(v)
 end
 
 function SoulPartyMemberFrameMixin:AurasUpdate(buffsChanged, debuffsChanged)
-    self.Flash:Hide()
+    self.StatusFlash:Hide()
     -- sort buffs by duration and add them from the shortest to the longest
     if buffsChanged and self.buffs then
 		local count = 1;

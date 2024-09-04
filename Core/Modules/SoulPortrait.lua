@@ -50,6 +50,7 @@ function SoulPortraitMixin:Update()
 end
 
 function SoulPortraitMixin:OnEvent(event, ...)
+    if not SOUL_ShouldUpdate(self) then return end
     local arg1 = ...;
     if ( event == "CVAR_UPDATE" ) then
 	elseif ( event == "VARIABLES_LOADED" ) then

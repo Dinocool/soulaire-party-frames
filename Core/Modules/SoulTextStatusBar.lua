@@ -9,6 +9,7 @@ function SoulTextStatusBarMixin:TextStatusBarInitialize()
 end
 
 function SoulTextStatusBarMixin:TextStatusBarOnEvent(event,...)
+	if not SOUL_ShouldUpdate(self) then return end
 	if ( event == "CVAR_UPDATE" ) then
 		local cvar, value = ...;
 		if cvar == "statusTextDisplay" then

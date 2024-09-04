@@ -24,23 +24,18 @@
 						<Anchor point="TOPLEFT" x="86" y="-26"/>
 					</Anchors>
 				</FontString>
-				<FontString parentKey="ResurrectableIndicator" inherits="ResurrectableIndicatorTemplate" hidden="true">
-					<Anchors>
-						<Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="BOTTOMLEFT" x="44" y="0"/>
-					</Anchors>
-				</FontString>
 			</Layer>
             <Layer level="OVERLAY"  textureSubLevel = "0">
 				<!-- StatusFlash is a flash texture for the player portrait and top bar (where the player name is).
 					 This is different from Flash, which is a flash of the entire frame area.-->
-				<Texture parentKey="StatusFlash" atlas="UI-HUD-UnitFrame-Player-PortraitOn-Status" useAtlasSize="true" hidden="true">
+				<Texture parentKey="Flash" atlas="UI-HUD-UnitFrame-Player-PortraitOn-Status" useAtlasSize="true" hidden="true">
 					<Anchors>
 						<Anchor point="TOPLEFT" x="17" y="-13"/>
 					</Anchors>
 				</Texture>
 			</Layer>
 			<Layer level="OVERLAY"  textureSubLevel = "1">
-				<Texture parentKey="Flash" atlas="UI-HUD-UnitFrame-Player-PortraitOn-InCombat" hidden="true" texelSnappingBias="0.0" snapToPixelGrid="false">
+				<Texture parentKey="StatusFlash" atlas="UI-HUD-UnitFrame-Player-PortraitOn-InCombat" hidden="true" texelSnappingBias="0.0" snapToPixelGrid="false">
 					<Anchors>
 						<Anchor point="CENTER" x="-2" y="1"/>
 					</Anchors>
@@ -221,6 +216,21 @@
 					<OnLoad function="RaiseFrameLevelByTwo"/>
 				</Scripts>
 			</Frame>
+			<Frame parentKey="IncomingRez" hidden="true">
+				<Size x="48" y="48"/>
+				<Anchors>
+					<Anchor point="CENTER" relativePoint="LEFT" x="54" y="-32"/>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture parentKey="texture" file="Interface/AddOns/SoulairePartyFrames/Art/ResIcon" setAllPoints="true">
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnLoad function="RaiseFrameLevelByTwo"/>
+				</Scripts>
+			</Frame>
 			<Frame parentKey="NotPresentIcon" ignoreParentAlpha="true" hidden="true">
 				<Size x="24" y="24"/>
 				<Anchors>
@@ -278,6 +288,7 @@
 		</Frames>
 		<Scripts>
 			<OnShow method="OnShow"/>
+			<OnHide method="OnHide"/>
 			<OnUpdate method="OnUpdate"/>
 		</Scripts>
 				

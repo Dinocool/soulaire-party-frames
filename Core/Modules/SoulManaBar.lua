@@ -24,6 +24,7 @@ end
 
 --Update triggered from an event rather then per-frame
 function SoulManaBarMixin:EventUpdate()
+    if not SOUL_ShouldUpdate(self) then return end
     local maxValue = max(UnitPowerMax(self.unit),1)
 
     --Health is between 0 and the units health... duh
