@@ -137,7 +137,7 @@ function SoulPartyFrameMixin:OnShow()
 end
 
 function SoulPartyFrameMixin:CheckIfParty()
-	if IsInRaid() then
+	if IsInRaid() and not IsActiveBattlefieldArena() then
 		self:QueueHide()
 	else
 	if not IsInCinematicScene() and not InCinematic() then
