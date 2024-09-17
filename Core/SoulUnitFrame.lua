@@ -1,16 +1,16 @@
-SoulPartyMemberFrameMixin={}
+SoulUnitFrameMixin={}
 
-function SoulPartyMemberFrameMixin:GetUnit()
+function SoulUnitFrameMixin:GetUnit()
 	-- Override unit is set when we get in a vehicle
 	-- Override unit will always be the original (most likely player/party member)
 	return self.overrideUnit or self.unit
 end
 
-function SoulPartyMemberFrameMixin:UpdateArt()
+function SoulUnitFrameMixin:UpdateArt()
 	self:ToPlayerArt()
 end
 
-function SoulPartyMemberFrameMixin:ToPlayerArt()
+function SoulUnitFrameMixin:ToPlayerArt()
     if self:IsForbidden() or InCombatLockdown() then return end
 
 	self.state = "player"
@@ -38,7 +38,7 @@ function SoulPartyMemberFrameMixin:ToPlayerArt()
 	--securecall("UnitFrame_Update", self, true)
 end
 
-function SoulPartyMemberFrameMixin:NoPowerBarPlayerArt()
+function SoulUnitFrameMixin:NoPowerBarPlayerArt()
     self.Texture:SetAtlas("plunderstorm-UI-HUD-UnitFrame-Player-PortraitOn-2x")
     self.StatusFlash:SetAtlas("plunderstorm-UI-HUD-UnitFrame-Player-PortraitOn-InCombat-2x", TextureKitConstants.UseAtlasSize)
 
@@ -56,7 +56,7 @@ function SoulPartyMemberFrameMixin:NoPowerBarPlayerArt()
     self.ManaBar:SetWidth(0)
 end
 
-function SoulPartyMemberFrameMixin:PowerBarPlayerArt()
+function SoulUnitFrameMixin:PowerBarPlayerArt()
     self.Texture:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn")
 
     self.StatusFlash:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-InCombat", TextureKitConstants.UseAtlasSize)
@@ -74,7 +74,7 @@ function SoulPartyMemberFrameMixin:PowerBarPlayerArt()
     self.ManaBar:SetWidth(129)
 end
 
-function SoulPartyMemberFrameMixin:HealthBarArt()
+function SoulUnitFrameMixin:HealthBarArt()
     local classHealth = true
     if SPF_DB then
         classHealth = SPF_DB.class_color_health_bars
@@ -98,7 +98,7 @@ function SoulPartyMemberFrameMixin:HealthBarArt()
 	self.HealthBar.DamagePredictionBar:SetPoint("BOTTOMRIGHT",self.HealthBar,"BOTTOMRIGHT",-1,1)
 end
 
-function SoulPartyMemberFrameMixin:StatusArt()
+function SoulUnitFrameMixin:StatusArt()
 
     self.Flash:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-Status", TextureKitConstants.UseAtlasSize)
     self:AddPulseAnimation(self.Flash)
@@ -107,14 +107,14 @@ end
 
 
 
-function SoulPartyMemberFrameMixin:OnHide()
+function SoulUnitFrameMixin:OnHide()
 	self.unit = nil
 end
 
-function SoulPartyMemberFrameMixin:OnShow()
+function SoulUnitFrameMixin:OnShow()
 end
 
-function SoulPartyMemberFrameMixin:AddPulseAnimation(frame)
+function SoulUnitFrameMixin:AddPulseAnimation(frame)
     if not frame.PulseAnimation then
         frame.PulseAnimation = frame:CreateAnimationGroup()
         local animGroup = frame.PulseAnimation
@@ -129,32 +129,24 @@ function SoulPartyMemberFrameMixin:AddPulseAnimation(frame)
     end
 end
 
-function SoulPartyMemberFrameMixin:Initialize()
+function SoulUnitFrameMixin:Initialize(layoutIndex)
 	-- Hook into parents methods
 	local parent = self:GetParent()
-	
 	self:AddPulseAnimation(self.IncomingRez)
-	parent:HookScript("OnAttributeChanged",function(frame,attribute,value)
-			if attribute == "unit" and self.unit ~= value and value ~= nil then
-				self.unit = value
-				if self.Sheen then
-					self.Sheen:SetVertexColor(1.0,1.0,1.0)
-					self.Sheen.SwipeAnimation:Play()
-				end
-				self:OnUnitChanged()
-				self:UpdateAssignedRoles()
-			end
-		end)
 	self:SetScript("OnEvent",self.OnEvent)
-	parent:HookScript("OnEnter",function(frame) 
+	self:HookScript("OnEnter",function(frame) 
 			self:OnEnter()
 		end)
-	parent:HookScript("OnLeave",function(frame) 			
+	self:HookScript("OnLeave",function(frame) 			
 			self:OnLeave()
 		end)
 	
-	local length = string.len(parent:GetName());
-	self.layoutIndex = tonumber(string.sub(parent:GetName(),length,length))
+	self.layoutIndex = layoutIndex
+
+	-- Interaction
+	self:SetAttribute("*type1", "target")
+	self:SetAttribute("*type2", "togglemenu")
+	self:SetAttribute("type2", "togglemenu")
 
 	-- Set for debugging purposes.
 	_G["SoulPartyFrame"..self.layoutIndex] = self
@@ -162,12 +154,13 @@ function SoulPartyMemberFrameMixin:Initialize()
 	_G["SUFHeaderparty"..self.layoutIndex] = self
 end
 
-function SoulPartyMemberFrameMixin:OnUnitChanged()
+function SoulUnitFrameMixin:SetUnit(unit)
+	self.unit = unit
 	self:Setup()
 	self.PortraitFrame:Update()
 end
 
-function SoulPartyMemberFrameMixin:Setup()
+function SoulUnitFrameMixin:Setup()
     self.soulaireFrame = true
 
 	self.debuffCountdown = 0
@@ -273,7 +266,7 @@ local DamageReductionList ={
 	}
 }
 
-function SoulPartyMemberFrameMixin:GetAbilityDR(auraInstanceID, aura)
+function SoulUnitFrameMixin:GetAbilityDR(auraInstanceID, aura)
 		--Handle DR's that work on stacks
 		local dr = DamageReductionList.spells[aura.spellId]
 		if not dr then return nil end
@@ -288,7 +281,7 @@ function SoulPartyMemberFrameMixin:GetAbilityDR(auraInstanceID, aura)
 		return (1.0-(dr.dr*mult))
 end
 
-function SoulPartyMemberFrameMixin:UpdateDamageReduction()
+function SoulUnitFrameMixin:UpdateDamageReduction()
 	local damageTaken = 1.0
 	self.buffs:Iterate(function(auraInstanceID, aura)
 		local dr = self:GetAbilityDR(auraInstanceID,aura)
@@ -312,7 +305,7 @@ function SoulPartyMemberFrameMixin:UpdateDamageReduction()
 end
 
 -- Registers Events this frame should listen to
-function SoulPartyMemberFrameMixin:RegisterEvents()
+function SoulUnitFrameMixin:RegisterEvents()
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
 	self:RegisterEvent("GROUP_ROSTER_UPDATE")
 	self:RegisterEvent("PLAYER_ROLES_ASSIGNED")
@@ -347,7 +340,7 @@ function SoulPartyMemberFrameMixin:RegisterEvents()
 	self:RegisterUnitEvent("UNIT_HEALTH", self.unit, self.petUnitToken)
 end
 
-function SoulPartyMemberFrameMixin:UpdateVoiceActivityNotification()
+function SoulUnitFrameMixin:UpdateVoiceActivityNotification()
 	if self.voiceNotification then
 		self.voiceNotification:ClearAllPoints()
 		if self.NotPresentIcon:IsShown() then
@@ -358,14 +351,14 @@ function SoulPartyMemberFrameMixin:UpdateVoiceActivityNotification()
 	end
 end
 
-function SoulPartyMemberFrameMixin:VoiceActivityNotificationCreatedCallback(notification)
+function SoulUnitFrameMixin:VoiceActivityNotificationCreatedCallback(notification)
 	self.voiceNotification = notification
 	self.voiceNotification:SetParent(self)
 	self:UpdateVoiceActivityNotification()
 	notification:Show()
 end
 
-function SoulPartyMemberFrameMixin:UpdateMember()
+function SoulUnitFrameMixin:UpdateMember()
 	local showFrame
 	if EditModeManagerFrame:ArePartyFramesForcedShown() then
 		showFrame = true
@@ -399,7 +392,7 @@ function SoulPartyMemberFrameMixin:UpdateMember()
 
 end
 
-function SoulPartyMemberFrameMixin:UpdateMemberHealth(elapsed)
+function SoulUnitFrameMixin:UpdateMemberHealth(elapsed)
 	if ( (self.unitHPPercent > 0) and (self.unitHPPercent <= 0.3) ) then
 		local alpha = 255
 		local counter = self.statusCounter + elapsed
@@ -421,7 +414,7 @@ function SoulPartyMemberFrameMixin:UpdateMemberHealth(elapsed)
 	end
 end
 
-function SoulPartyMemberFrameMixin:UpdateDistance()
+function SoulUnitFrameMixin:UpdateDistance()
 	if not self.unit then return end
 	local inRange, _ = UnitInRange(self.unit)
 
@@ -432,7 +425,7 @@ function SoulPartyMemberFrameMixin:UpdateDistance()
     end
 end
 
-function SoulPartyMemberFrameMixin:UpdateLeader()
+function SoulUnitFrameMixin:UpdateLeader()
 	local leaderIcon = self.PartyMemberOverlay.LeaderIcon
 	local guideIcon = self.PartyMemberOverlay.GuideIcon
 
@@ -450,7 +443,7 @@ function SoulPartyMemberFrameMixin:UpdateLeader()
 	end
 end
 
-function SoulPartyMemberFrameMixin:UpdatePvPStatus()
+function SoulUnitFrameMixin:UpdatePvPStatus()
 	local icon = self.PartyMemberOverlay.PVPIcon
 	local factionGroup = UnitFactionGroup(self:GetUnit())
 	if UnitIsPVPFreeForAll(self:GetUnit()) then
@@ -465,7 +458,7 @@ function SoulPartyMemberFrameMixin:UpdatePvPStatus()
 	end
 end
 
-function SoulPartyMemberFrameMixin:UpdateAssignedRoles()
+function SoulUnitFrameMixin:UpdateAssignedRoles()
 	local icon = self.PartyMemberOverlay.RoleIcon
 	local role = UnitGroupRolesAssignedEnum(self:GetUnit())
 	if role == Enum.LFGRole.Tank then
@@ -482,7 +475,7 @@ function SoulPartyMemberFrameMixin:UpdateAssignedRoles()
 	end
 end
 
-function SoulPartyMemberFrameMixin:UpdateVoiceStatus()
+function SoulUnitFrameMixin:UpdateVoiceStatus()
 	if not UnitName(self:GetUnit()) then
 		--No need to update if the frame doesn't have a unit.
 		return
@@ -500,7 +493,7 @@ function SoulPartyMemberFrameMixin:UpdateVoiceStatus()
 	end
 end
 
-function SoulPartyMemberFrameMixin:UpdateReadyCheck()
+function SoulUnitFrameMixin:UpdateReadyCheck()
 	local readyCheckFrame = self.ReadyCheck
 	
 	local readyCheckStatus = GetReadyCheckStatus(self:GetUnit())
@@ -517,7 +510,7 @@ function SoulPartyMemberFrameMixin:UpdateReadyCheck()
 	end
 end
 
-function SoulPartyMemberFrameMixin:UpdateNotPresentIcon()
+function SoulUnitFrameMixin:UpdateNotPresentIcon()
 	self.NotPresentIcon.Status:Hide()
 	if UnitInOtherParty(self:GetUnit()) then
 		self.NotPresentIcon.texture:SetAtlas("groupfinder-eye-single", true)
@@ -563,7 +556,7 @@ function SoulPartyMemberFrameMixin:UpdateNotPresentIcon()
 	self:UpdateVoiceActivityNotification()
 end
 
-function SoulPartyMemberFrameMixin:OnEvent(event, ...)
+function SoulUnitFrameMixin:OnEvent(event, ...)
 	--securecall("UnitFrame_OnEvent", self, event, ...)
 	--Do nothing if we don't have a unit
 	if not SOUL_ShouldUpdate(self) then return end
@@ -628,7 +621,7 @@ function SoulPartyMemberFrameMixin:OnEvent(event, ...)
 	end
 end
 
-function SoulPartyMemberFrameMixin:UpdateResurection()
+function SoulUnitFrameMixin:UpdateResurection()
 	if UnitHasIncomingResurrection(self.unit) then
 		self.IncomingRez:Show()
 	else
@@ -636,7 +629,7 @@ function SoulPartyMemberFrameMixin:UpdateResurection()
 	end
 end
 
-function SoulPartyMemberFrameMixin:UpdateThreat()
+function SoulUnitFrameMixin:UpdateThreat()
 	--Don't bother displaying threat if your a tank, as all is well
 	if (UnitGroupRolesAssigned(self.unit) == "TANK") then return end
 
@@ -650,7 +643,7 @@ function SoulPartyMemberFrameMixin:UpdateThreat()
 	end
 end
 
-function SoulPartyMemberFrameMixin:UpdateName()
+function SoulUnitFrameMixin:UpdateName()
 	local nameText = GetUnitName(self.unit);
 	if ( nameText ) then
 		if ( UnitInPartyIsAI(self.unit) and C_LFGInfo.IsInLFGFollowerDungeon() ) then
@@ -660,25 +653,25 @@ function SoulPartyMemberFrameMixin:UpdateName()
 	end
 end
 
-function SoulPartyMemberFrameMixin:OnUpdate(elapsed)
+function SoulUnitFrameMixin:OnUpdate(elapsed)
 	if self.initialized then
 		self:UpdateMemberHealth(elapsed)
 	end
 end
 
-function SoulPartyMemberFrameMixin:OnEnter()
+function SoulUnitFrameMixin:OnEnter()
 	if self.unit ~= nil then
 		UnitFrame_OnEnter(self)
 	end
 end
 
-function SoulPartyMemberFrameMixin:OnLeave()
+function SoulUnitFrameMixin:OnLeave()
 	if self.unit ~= nil then
 		UnitFrame_OnLeave(self)
 	end
 end
 
-function SoulPartyMemberFrameMixin:UpdateOnlineStatus()
+function SoulUnitFrameMixin:UpdateOnlineStatus()
 	local healthBar = self.HealthBar
 
 	if not UnitIsConnected(self:GetUnit()) then
@@ -696,7 +689,7 @@ function SoulPartyMemberFrameMixin:UpdateOnlineStatus()
 	end
 end
 
-function SoulPartyMemberFrameMixin:PartyMemberHealthCheck()
+function SoulUnitFrameMixin:PartyMemberHealthCheck()
 	local unitHPMax, unitCurrHP
 	_, unitHPMax = self.HealthBar:GetMinMaxValues()
 
@@ -734,7 +727,7 @@ function SoulPartyMemberFrameMixin:PartyMemberHealthCheck()
 	end
 end
 
-function SoulPartyMemberFrameMixin:UpdateAuras(unitAuraUpdateInfo)
+function SoulUnitFrameMixin:UpdateAuras(unitAuraUpdateInfo)
 	local debuffsChanged = false;
 	local buffsChanged = false;
 	local otherBuffsChanged = false;
@@ -813,7 +806,7 @@ function SoulPartyMemberFrameMixin:UpdateAuras(unitAuraUpdateInfo)
 	end
 end
 
-function SoulPartyMemberFrameMixin:ParseAllAuras()
+function SoulUnitFrameMixin:ParseAllAuras()
 	if self.debuffs == nil then
 		self.debuffs = TableUtil.CreatePriorityTable(AuraUtil.UnitFrameDebuffComparator, TableUtil.Constants.AssociativePriorityTable);
 		self.buffs = TableUtil.CreatePriorityTable(AuraUtil.DefaultAuraCompare, TableUtil.Constants.AssociativePriorityTable);
@@ -841,7 +834,7 @@ function SoulPartyMemberFrameMixin:ParseAllAuras()
 	AuraUtil.ForEachAura(self.unit, AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful, AuraUtil.AuraFilters.Raid), batchCount, HandleAura, usePackedAura);
 end
 
-function SoulPartyMemberFrameMixin:CreateAura(auraIndex, auraType)
+function SoulUnitFrameMixin:CreateAura(auraIndex, auraType)
 	if not self.auras then self.auras={} end
 
     local auraButtonName = auraType..auraIndex
@@ -910,7 +903,7 @@ function SoulPartyMemberFrameMixin:CreateAura(auraIndex, auraType)
     end)
 end
 
-function SoulPartyMemberFrameMixin:AddSwipeAnimation(frame, offsetX, offsetY,duration)
+function SoulUnitFrameMixin:AddSwipeAnimation(frame, offsetX, offsetY,duration)
     if not frame.SwipeAnimation then
         frame.SwipeAnimation = frame:CreateAnimationGroup()
         local animGroup = frame.SwipeAnimation
@@ -924,7 +917,7 @@ function SoulPartyMemberFrameMixin:AddSwipeAnimation(frame, offsetX, offsetY,dur
     end
 end
 
-function SoulPartyMemberFrameMixin:SetAura(aura, auraType, auraIndex)
+function SoulUnitFrameMixin:SetAura(aura, auraType, auraIndex)
     local auraButtonName = auraType..auraIndex
 
     local auraButton = self.auras[auraButtonName]
@@ -1040,11 +1033,11 @@ local Blacklist = {
 }
 
 
-function SoulPartyMemberFrameMixin:BuffFilter(v)
+function SoulUnitFrameMixin:BuffFilter(v)
 	return Blacklist.spells[v.spellId] == nil
 end
 
-function SoulPartyMemberFrameMixin:AurasUpdate(buffsChanged, debuffsChanged)
+function SoulUnitFrameMixin:AurasUpdate(buffsChanged, debuffsChanged)
     self.StatusFlash:Hide()
     -- sort buffs by duration and add them from the shortest to the longest
     if buffsChanged and self.buffs then
@@ -1075,7 +1068,7 @@ function SoulPartyMemberFrameMixin:AurasUpdate(buffsChanged, debuffsChanged)
     end
 end
 
-function SoulPartyMemberFrameMixin:GetAuraAnchor(debuff)
+function SoulUnitFrameMixin:GetAuraAnchor(debuff)
 	if SPF_DB.party_layout == "HORIZONTAL"  then
 		if debuff then
 			return "TOPLEFT", 48, 39
@@ -1091,14 +1084,14 @@ function SoulPartyMemberFrameMixin:GetAuraAnchor(debuff)
 	end
 end
 
-function SoulPartyMemberFrameMixin:UpdateAuraAnchors()
+function SoulUnitFrameMixin:UpdateAuraAnchors()
 	for auraIndex = 1, 10 do
 		self:SetAuraAnchor(auraIndex, "Buff", self:GetAuraAnchor(false))
 		self:SetAuraAnchor(auraIndex, "Debuff", self:GetAuraAnchor(true))
 	end
 end
 
-function SoulPartyMemberFrameMixin:SetAuraAnchor(auraIndex, auraType, anchor, x, y)
+function SoulUnitFrameMixin:SetAuraAnchor(auraIndex, auraType, anchor, x, y)
     if not self.auras then return end
 	local auraButtonName = auraType..auraIndex
     local aura = self.auras[auraButtonName]
@@ -1112,7 +1105,7 @@ function SoulPartyMemberFrameMixin:SetAuraAnchor(auraIndex, auraType, anchor, x,
 
 end
 
-function SoulPartyMemberFrameMixin:CreateAuras()
+function SoulUnitFrameMixin:CreateAuras()
     local maxBuffs=10
 	local maxDebuffs=10
     for auraIndex = 1, maxBuffs do

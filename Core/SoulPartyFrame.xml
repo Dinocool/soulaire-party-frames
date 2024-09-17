@@ -1,5 +1,6 @@
 <Ui xmlns='http://www.blizzard.com/wow/ui/'>
 	<Frame mixin="SoulPartyFrameMixin" frameStrata="LOW" parent="UIParent" toplevel="true" hidden="true">
+		<Size x="1" y="1"/>
 		<Anchors>
 			<Anchor point="TOPLEFT"/>
 		</Anchors>

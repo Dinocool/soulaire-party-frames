@@ -1,3 +1,5 @@
+local EditMode = LibStub:GetLibrary("EditModeExpanded-1.0")
+
 SoulPartyFrameMixin = {}
 
 local combatMethodList = {}
@@ -33,61 +35,27 @@ function SoulPartyFrameMixin:OnLoad()
 	self:RegisterEvent("PLAY_MOVIE")
 	self:RegisterEvent("STOP_MOVIE")
 	self:RegisterEvent("PLAYER_REGEN_ENABLED")
-end
-
-local function InitializeUnit(header, frameName)
-	local frame = _G[frameName]
-
-	frame:RegisterForClicks("AnyUp")
-	if not frame.unitFrame then
-		frame.unitFrame= CreateFrame("Frame", nil, frame, "SoulPartyMemberFrameTemplate")
+	--Create member frames
+	self.unitFrame={}
+	yOffset = 0;
+	xSize = 0;
+	for i = 1, (MAX_PARTY_MEMBERS + 1) do
+		local unitFrame = CreateFrame("Frame", nil, self, "SoulPartyMemberFrameTemplate")
+		self.unitFrame[i] = unitFrame
+		unitFrame:SetPoint("TOPLEFT",0,yOffset)
+		unitFrame:Initialize(i)
+		x,y = unitFrame:GetSize()
+		xSize = x
+		yOffset = yOffset- y
 	end
-	frame.unitFrame:SetAllPoints(frame)
-	frame.unitFrame:Initialize()
-end
-
-function SoulPartyFrameMixin:CreateHeader()
-
-	local type = "party"
-	local headerFrame = CreateFrame("Frame", "SUFHeader" .. type, nil, "ResizeLayoutFrame, SecureGroupHeaderTemplate")
-	headerFrame:SetParent(self)
-	headerFrame:SetAttribute("template","SecureUnitButtonTemplate")
-	headerFrame:SetAttribute("showParty",true)
-	headerFrame:SetAttribute("showRaid",false)
-	headerFrame:SetAttribute("showSolo",false)
-	headerFrame:SetAttribute("groupBy","ROLE")
-	headerFrame:SetAttribute("groupingOrder","1,2,3,4,5,6,7,8")
-
-	--Load settings from profile
-	self:LoadSettings(headerFrame)
-
-	headerFrame:SetClampedToScreen(true)
-	headerFrame.initialConfigFunction = InitializeUnit
-
-	local secureInitializeUnit = [[
-	local header = self:GetParent()
-
-	self:SetAttribute("*type1", "target")
-	self:SetAttribute("*type2", "togglemenu")
-	self:SetAttribute("type2", "togglemenu")
-
-	self:SetWidth("232")
-	self:SetHeight("100")
-
-	header:CallMethod("initialConfigFunction", self:GetName())
-]]
-
-	headerFrame:SetAttribute("initialConfigFunction",secureInitializeUnit)
-	--headerFrame:ClearAllPoints()
-	--headerFrame:SetPoint("TOPLEFT",self,"TOPLEFT")
-	headerFrame:Show()
-	self.headerFrame = headerFrame
+	--Resize frame to match these dimensions
+	self:SetSize(xSize,abs(yOffset))
 end
 
 function SoulPartyFrameMixin:StopDrag()
-	self.headerFrame:StopMovingOrSizing()
+	self:StopMovingOrSizing()
 	if SPF_DB then
-		local point, _, relativePoint, x, y = self.headerFrame:GetPoint()
+		local point, _, relativePoint, x, y = self:GetPoint()
 		SPF_DB.party_point = point
 		SPF_DB.party_relative_point = relativePoint
 		SPF_DB.party_position_x = x
@@ -96,8 +64,6 @@ function SoulPartyFrameMixin:StopDrag()
 end
 
 function SoulPartyFrame_UpdateSettingFrameSize()
-	
-	if not SoulPartyFrame.headerFrame then return end;
 	local scale = 1
 	if SPF_DB then
 		scale = SPF_DB.party_scale
@@ -106,8 +72,6 @@ function SoulPartyFrame_UpdateSettingFrameSize()
 end
 
 function SoulPartyFrame_UpdateSettingFramePoint()
-	
-	if not SoulPartyFrame.headerFrame then return end;
 	local point = "TOPLEFT"
 	local relativePoint = "TOPLEFT"
 	local x = 0
@@ -118,22 +82,33 @@ function SoulPartyFrame_UpdateSettingFramePoint()
 		x = math.floor(SPF_DB.party_position_x)
 		y = math.floor(SPF_DB.party_position_y)
 	end
-	SoulPartyFrame.headerFrame:ClearAllPoints()
-	SoulPartyFrame.headerFrame:SetPoint(point, UIParent, relativePoint, x, y)
+	SoulPartyFrame:SetClampedToScreen( true )
+	--SoulPartyFrame:ClearAllPoints()
+	--SoulPartyFrame:SetPoint(point, UIParent, relativePoint, x, y)
 end
 
 function SoulPartyFrameMixin:OnShow()
-	self:CreateHeader()
-	self:CheckIfParty()
+	--self:CreateHeader()
+	--self:CheckIfParty()
+
+	EditMode:RegisterFrame(self,"Party Frame",SPF_DB.party_frame)
+
+	for i = 1, (MAX_PARTY_MEMBERS + 1) do
+		if i <= MAX_PARTY_MEMBERS then
+			self.unitFrame[i]:SetUnit("party"..i)
+		else
+			self.unitFrame[i]:SetUnit("player")
+		end
+	end
 
 	--Populate what dispells our player knows
 	self.dispels=SOUL_GetClassDispels("player")
 	
 	--Insert Into omnicd
-	if OmniCD and not self.injectedIntoOmni then
-		table.insert(OmniCD[1].unitFrameData,{ [1] = "SoulairePartyFrames",[2] = "SoulPartyFrame",[3] = "unit",})
-		self.injectedIntoOmni=true
-	end
+	--if OmniCD and not self.injectedIntoOmni then
+	--	table.insert(OmniCD[1].unitFrameData,{ [1] = "SoulairePartyFrames",[2] = "SoulPartyFrame",[3] = "unit",})
+	--	self.injectedIntoOmni=true
+	--end
 end
 
 function SoulPartyFrameMixin:CheckIfParty()
@@ -196,36 +171,20 @@ end
 
 function SoulPartyFrameMixin:LoadSettings(headerFrame)
 
-	headerFrame:SetAttribute("showPlayer",SPF_DB.show_player_frame)
 	if SPF_DB.party_layout == "HORIZONTAL" then
-		headerFrame:SetAttributeNoHandler("point","LEFT")
-		for i = 1, (MAX_PARTY_MEMBERS + 1) do
-			if not headerFrame[i] then return end
-			local memberFrame = headerFrame[i]
-			memberFrame:ClearPoint("TOP")
-		end
 	else
-		headerFrame:SetAttributeNoHandler("point","TOP")
-		for i = 1, (MAX_PARTY_MEMBERS + 1) do
-			if not headerFrame[i] then return end
-			local memberFrame = headerFrame[i]
-			memberFrame:ClearPoint("LEFT")
-		end
+
 	end
 end
 
 function SoulPartyFrameMixin:UpdateLayout()
-	if not self.headerFrame then return end
-	
 	self:LoadSettings(self.headerFrame)
-	
-	self.headerFrame:SetAttribute("forceUpdate",time())
 
-	for i = 1, (MAX_PARTY_MEMBERS + 1) do
-		if not self.headerFrame[i] or not self.headerFrame[i].unitFrame then return end
-		local memberFrame = self.headerFrame[i].unitFrame
-		memberFrame:UpdateAuraAnchors()
-	end
+	--for i = 1, (MAX_PARTY_MEMBERS + 1) do
+	--	if not self.headerFrame[i] or not self.headerFrame[i].unitFrame then return end
+	--	local memberFrame = self.headerFrame[i].unitFrame
+	--	memberFrame:UpdateAuraAnchors()
+	--end
 end
 
 function SoulPartyFrameMixin:UpdateMemberFrames()

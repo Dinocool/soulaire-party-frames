@@ -4,7 +4,7 @@
     <Include file='Modules/Load.xml'/>
     <Script file='HideBlizzard.lua'/>
     <Script file='SoulPartyFrame.lua'/>
-    <Script file='SoulPartyMemberFrame.lua'/>
+    <Script file='SoulUnitFrame.lua'/>
     <Include file='SoulPartyMemberFrameTemplate.xml'/>
     <Include file='SoulPartyFrame.xml'/>
     <Script file='PartyAurasMasque.lua'/>
