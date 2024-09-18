@@ -288,29 +288,6 @@ function SoulPartyMemberFrameMixin:GetAbilityDR(auraInstanceID, aura)
 		return (1.0-(dr.dr*mult))
 end
 
-function SoulPartyMemberFrameMixin:UpdateDamageReduction()
-	local damageTaken = 1.0
-	self.buffs:Iterate(function(auraInstanceID, aura)
-		local dr = self:GetAbilityDR(auraInstanceID,aura)
-		if dr ~= nil then
-			damageTaken = damageTaken*dr;
-		end
-	end)
-	self.otherBuffs:Iterate(function(auraInstanceID, aura)
-		local dr = self:GetAbilityDR(auraInstanceID,aura)
-		if dr ~= nil then
-			damageTaken = damageTaken*dr;
-		end
-	end)
-	if damageTaken ~= 1.0 then
-		self.DamageReduction:Show()
-		self.DamageReduction.CenterText:SetText(tostring((1.0-damageTaken)*100.0).."%");
-	else
-		self.DamageReduction:Hide()
-		self.DamageReduction.CenterText:SetText("");
-	end
-end
-
 -- Registers Events this frame should listen to
 function SoulPartyMemberFrameMixin:RegisterEvents()
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -389,7 +366,6 @@ function SoulPartyMemberFrameMixin:UpdateMember()
 	end
 
 	self:UpdateAuras()
-	self:UpdateDamageReduction()
 	self:UpdatePvPStatus()
 	self:UpdateVoiceStatus()
 	self:UpdateReadyCheck()
@@ -808,9 +784,26 @@ function SoulPartyMemberFrameMixin:UpdateAuras(unitAuraUpdateInfo)
 	if buffsChanged or debuffsChanged then
 		self:AurasUpdate(buffsChanged,debuffsChanged)
 	end
-	if buffsChanged or otherBuffsChanged then
-		self:UpdateDamageReduction()
+	if debuffsChanged then
+		self:UpdateCCPortrait()
 	end
+end
+
+function SoulPartyMemberFrameMixin:UpdateCCPortrait()
+	--Find the highest duration cc and use that
+	local spellID, expirationTime, duration
+	self.debuffs:Iterate(function(auraInstanceID, aura)
+		if aura then
+			if DetailsFramework.CrowdControlSpells[aura.spellId] then
+				if not expirationTime or expirationTime < aura.expirationTime then
+					spellID = aura.spellId
+					expirationTime = aura.expirationTime
+					duration = aura.duration
+				end
+			end
+		end
+	end)
+	self.PortraitFrame:UpdateCCAura(spellID, expirationTime, duration)
 end
 
 function SoulPartyMemberFrameMixin:ParseAllAuras()

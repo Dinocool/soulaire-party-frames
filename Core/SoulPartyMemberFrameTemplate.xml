@@ -206,6 +206,9 @@
 						</Texture>
 					</Layer>
 				</Layers>
+				<Scripts>
+					<OnLoad function="RaiseFrameLevelByTwo"/>
+				</Scripts>
 			</Frame>
 			<Frame parentKey="ReadyCheck" inherits="ReadyCheckStatusTemplate" hidden="true">
 				<Size x="40" y="40"/>
@@ -265,25 +268,6 @@
 					</OnEnter>
 					<OnLeave function="GameTooltip_Hide"/>
 				</Scripts>
-			</Frame>
-			<Frame parentKey="DamageReduction">
-				<Size x="32" y="36"/>
-				<Anchors>
-					<Anchor point="CENTER" relativePoint="LEFT" x="54" y="-32"/>
-				</Anchors>
-				<Layers>
-					<Layer level="ARTWORK">
-						<Texture parentKey="texture" atlas="UI-CastingBar-Shield" setAllPoints="true">
-						</Texture>
-					</Layer>
-					<Layer level="OVERLAY" textureSubLevel="1">
-						<FontString parentKey="CenterText" inherits="TextStatusBarTextLarge">
-							<Anchors>
-								<Anchor point="CENTER" x="2" y="0"/>
-							</Anchors>
-						</FontString>
-					</Layer>
-				</Layers>
 			</Frame>
 		</Frames>
 		<Scripts>

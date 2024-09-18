@@ -43,6 +43,28 @@ function SoulPortraitMixin:Initialize(unit)
     self.background:AddMaskTexture(self.PortraitMask)
     ]]--
     
+
+    --Setup extra portrait details
+
+        local ccTexture = self:CreateTexture(nil, "OVERLAY")
+        ccTexture:SetHeight(60)
+        ccTexture:SetWidth(62)
+        self.ccTexture = ccTexture
+        
+        ccTexture:SetPoint ("topleft", self, "topleft", 0, 0)
+        
+        local ccCooldown= CreateFrame("Cooldown", nil,  self)
+        ccCooldown:SetSwipeTexture("interface/hud/uiunitframeplayerportraitmask2x")
+        ccCooldown:SetSwipeColor(0, 0, 0, 0.5)
+        ccCooldown:SetSize(60, 60)
+        
+        ccCooldown:SetPoint ("topleft", self, "topleft", 0, 0)
+        --ccCooldown:SetPoint ("bottomright", self, "bottomleft", 48, -16)
+        local ccTimer = ccCooldown:GetRegions()
+        ccTimer:SetFont("Fonts\\FRIZQT__.TTF", 20, "OUTLINE")
+        self.ccCooldown = ccCooldown
+        --ccCooldown.SwipeTexture:AddMaskTexture(self.PortraitMask)
+        ccTexture:AddMaskTexture(self.PortraitMask)
 end
 
 function SoulPortraitMixin:Update()
@@ -61,5 +83,21 @@ function SoulPortraitMixin:OnEvent(event, ...)
         else
             self:Update()
         end
+    end
+end
+
+function SoulPortraitMixin:UpdateCCAura(spellID, expirationTime, duration)
+    local hasCC = spellID and expirationTime
+    if hasCC then
+        self.ccCooldown:SetCooldown(expirationTime - duration, duration)
+        if spellID ~= nil then
+            local icon = select(1, C_Spell.GetSpellInfo(spellID))
+            if icon then
+                self.ccTexture:SetTexture(icon["iconID"])
+            end
+        end
+        self.ccTexture:Show()
+    else
+        self.ccTexture:Hide()
     end
 end
